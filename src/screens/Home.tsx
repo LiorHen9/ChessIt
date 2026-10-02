@@ -7,11 +7,16 @@ import { localDay } from '../content/puzzles/index';
 import { totals } from '../learning/progress';
 import { dueItems } from '../learning/review';
 import { levelInfo } from '../engine/levels';
+import type { OpenRoom } from '../net/openRoom';
 
 interface Props {
   profile: Profile;
   progress: Progress | null;
   hasSavedGame: boolean;
+  /** This profile's open room (two phones), to come back to. */
+  openRoom?: OpenRoom;
+  onRoom: () => void;
+  onResumeRoom: () => void;
   onSwitchProfile: () => void;
   onNewGame: () => void;
   onResume: () => void;
@@ -25,8 +30,6 @@ interface Props {
   /** The profile changed here (theme) and was saved. */
   onProfile: (p: Profile) => void;
 }
-
-const SOON = [{ icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }];
 
 /** Offer the placement test to teens and adults who have not started the path or taken it. */
 export function offerPlacement(profile: Profile, progress: Progress | null): boolean {
@@ -78,6 +81,20 @@ export function Home(props: Props) {
           <span class="action-text">
             <span class="action-title">המשך המשחק</span>
             <span class="action-sub">יש משחק פתוח מהפעם הקודמת</span>
+          </span>
+        </button>
+      )}
+
+      {props.openRoom && (
+        <button class="action action-resume action-room-resume" data-testid="home-room-resume" onClick={props.onResumeRoom}>
+          <span class="action-icon" aria-hidden="true">
+            📱
+          </span>
+          <span class="action-text">
+            <span class="action-title">חזרה לחדר</span>
+            <span class="action-sub">
+              חדר <bdi dir="ltr">{props.openRoom.code}</bdi> עדיין פתוח
+            </span>
           </span>
         </button>
       )}
@@ -181,6 +198,16 @@ export function Home(props: Props) {
         </span>
       </button>
 
+      <button class="action action-room" data-testid="home-room" onClick={props.onRoom}>
+        <span class="action-icon" aria-hidden="true">
+          📱
+        </span>
+        <span class="action-text">
+          <span class="action-title">חדר לשני טלפונים</span>
+          <span class="action-sub">כל אחד מהטלפון שלו, גם מבית אחר</span>
+        </span>
+      </button>
+
       {themes && (
         <div class="sheet-backdrop" onClick={() => setThemes(false)}>
           <section class="card sheet" role="dialog" aria-label="ערכת נושא" onClick={(e) => e.stopPropagation()}>
@@ -201,20 +228,6 @@ export function Home(props: Props) {
         </div>
       )}
 
-      <h2 class="section-title">בקרוב</h2>
-      <ul class="soon">
-        {SOON.map((s) => (
-          <li key={s.title} class="action action-soon" aria-disabled="true">
-            <span class="action-icon" aria-hidden="true">
-              {s.icon}
-            </span>
-            <span class="action-text">
-              <span class="action-title">{s.title}</span>
-              <span class="action-sub">{s.text}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
     </main>
   );
 }

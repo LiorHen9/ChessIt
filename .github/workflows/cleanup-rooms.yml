@@ -1,0 +1,31 @@
+name: Clean up old rooms
+
+# Rooms are deleted by the phones when both players leave. This catches the rest: rooms with no
+# change for two hours (someone just closed the app). Needs the FIREBASE_SERVICE_ACCOUNT secret
+# (docs/FIREBASE.md, part ד); without it the job only prints that it skipped.
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cleanup-rooms
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Delete rooms idle for 2 hours
+        run: node scripts/cleanup-rooms.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

@@ -19,12 +19,12 @@
 
 - אתר: https://liorhen9.github.io/ChessIt/
 - מאגר: https://github.com/LiorHen9/ChessIt (ענף `main`; כל דחיפה נבנית ומתפרסמת ב-GitHub Pages)
-- מסמכים: `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/prompts/`
+- מסמכים: `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/FIREBASE.md` (הקמת החדרים, למשתמש), `docs/prompts/`
 
 ## טכנולוגיה ומבנה
 
 - Vite + TypeScript (strict) + Preact. חוקי השחמט: chess.js 1.x.
-- `src/app/App.tsx` – ניתוב בין מסכים (מכונת מצבים פשוטה, בלי ספריית ניתוב). מסכים שלא צריך בכניסה נטענים בעצלות דרך `lazy()` ב-`src/app/lazy.tsx` (משחק, סיכום, חידות, חזרה, מבחן כניסה, הגדרות, תחנות של עמדות אמיתיות). מסך חדש שלא צריך מיד – גם הוא דרך `lazy()`, כדי לשמור על הטעינה הראשונה (היום כ-259KB, התקרה 300KB).
+- `src/app/App.tsx` – ניתוב בין מסכים (מכונת מצבים פשוטה, בלי ספריית ניתוב). מסכים שלא צריך בכניסה נטענים בעצלות דרך `lazy()` ב-`src/app/lazy.tsx` (משחק, סיכום, חידות, חזרה, מבחן כניסה, הגדרות, תחנות של עמדות אמיתיות, חדרים). מסך חדש שלא צריך מיד – גם הוא דרך `lazy()`, כדי לשמור על הטעינה הראשונה (היום כ-260KB, התקרה 300KB).
 - `src/themes/` – ערכות נושא: `index.ts` (רשימה, `applyTheme`, `useTheme`, `suggestTheme`), `clean.ts` מוטמעת, `space.ts`/`forest.ts` נטענות בעצלות, `pieceSprite.ts` (ציורי הכלים). "איך מוסיפים ערכה" ב-ARCHITECTURE.md.
 - `src/components/Piece.tsx` – הכלים ב-SVG: `PieceSprite` (פעם אחת ב-App), `PieceUse` בתוך הלוח, `PieceIcon` ב-HTML. צבעים ממשתני `--pc-*` של הערכה.
 - `src/audio/sound.ts` – צלילים ב-Web Audio (`playSound`). הלוח משמיע מסע/אכילה/שח לבד; `quiet` ללוחות הדגמה. `src/audio/speech.ts` – הקראה בעברית, רק עם קול עברי (`speak`, `autoSpeak`, `cleanForSpeech`). `src/components/Speak.tsx` – `SpeakButton`, `Feedback` (שורת המשוב, מוקראת), `NarrationHelp`, `useAutoSpeak`.
@@ -40,6 +40,7 @@
 - `src/content/puzzles/` – חידות Lichess, קובץ לכל נושא (import דינמי), נוצרים ב-`scripts/puzzles.ts`. `src/content/placement.ts` – מבחן הכניסה.
 - `src/learning/` – תנועת כלים בתרגולים של חלקים 1–2 (`drill.ts`, בלי chess.js), בודק מטרות ופותר (`goals.ts`), מטרות על עמדות אמיתיות מחלק 3 (`real.ts`, chess.js), המאמן (`coach.ts`), כוכבים, פתיחת תחנות, חידות ומבחן כניסה (`progress.ts`), חזרה מרווחת (`review.ts`), טקסט לפי גיל ומין (`text.ts`).
 - `src/components/RealTask.tsx` – לוח של משימה על עמדה אמיתית (תחנה, חידה, שאלת מבחן). עם `?seed=` הוא חושף `window.__chessitTask` (`fen`, `busy`, `hint`) לבדיקות.
+- `src/net/` – חדרים (שני טלפונים): `transport.ts` (ממשק `Transport`, `RoomDoc`, ההודעות, `parseMessage`/`parseRoomDoc`, האלפבית של הקוד), `rules.ts` (כללי Firebase ב-TS – **כל שינוי בכללים נעשה גם ב-`firebase/database.rules.json`, ואז מבקשים מהמשתמש להדביק אותם מחדש ב-Firebase**), `firebase.ts` (REST + EventSource, בלי SDK), `local.ts` (`?transport=local`, בין לשוניות), `room.ts` (`RoomClient`), `openRoom.ts` (החדר הפתוח לכל פרופיל, בטעינה הראשונה), `qr.ts`, `config.ts` (`FIREBASE_DB_URL`). המסכים: `screens/RoomScreen.tsx`, `RoomGame.tsx`, `room.css` – chunk אחד בטעינה עצלה. ניקוי: `scripts/cleanup-rooms.mjs` + `.github/workflows/cleanup-rooms.yml` (סוד `FIREBASE_SERVICE_ACCOUNT`).
 - טקסט תוכן מוצג דרך `RichText` (שומר על e4 ומספרים משמאל לימין, ומוסיף `︎` לסמלי כלים).
 
 ## מוסכמות
@@ -49,7 +50,7 @@
 - **SVG ב-Preact**: מאפיינים בכתיב kebab-case (`text-anchor`, `dominant-baseline`), לא camelCase.
 - **גדלי מגע**: לפחות 44px. טקסטים קצרים; לגיל 5–7 משפט אחד.
 - **כלים**: על המסך תמיד `PieceIcon`/`PieceUse` (SVG), לא תווי Unicode. `PIECE_GLYPH` נשאר רק לסמלים בתוך טקסט התוכן (`RichText` מוסיף להם `︎` כדי שלא יוצגו כאימוג'י באייפון).
-- **צבעים**: רק משתני CSS (`var(--ink)`, `var(--sq-dark)` ...), כדי שכל ערכה תעבוד. משתנה חדש – להגדיר ב-`:root`, ב-`clean.ts` ובכל ערכה, ולהריץ `tests/themes/check.ts`.
+- **צבעים**: רק משתני CSS (`var(--ink)`, `var(--sq-dark)` ...), כדי שכל ערכה תעבוד. ה-QR תמיד `--qr-ink` על `--qr-paper` (שחור על לבן בכל ערכה). משתנה חדש – להגדיר ב-`:root`, ב-`clean.ts` ובכל ערכה, ולהריץ `tests/themes/check.ts`.
 - **טקסט שילד צריך לשמוע**: משוב דרך `Feedback`, ומשימה חדשה עם `SpeakButton` ו-`useAutoSpeak`.
 - **commit**: הודעה באנגלית, ובסופה שורות הייחוס שהסביבה מגדירה.
 
@@ -59,10 +60,12 @@
 - **אם npm חסום בסביבת העבודה** (כך היה בסשנים הקודמים): לשכפל את preact (תגית 10.x האחרונה) ואת chess.js מ-GitHub לתיקיית scratchpad, למפות אותם ב-`paths` של tsconfig זמני, ולהריץ:
   - בדיקת טיפוסים: `tsc -p <tsconfig זמני>` (שגיאת ה-import של `styles.css` צפויה מקומית ואפשר להתעלם ממנה).
   - בנייה: `bun build src/main.tsx` עם אותם `paths`. ל-chess.js צריך קובץ דמה `src/pgn.ts`, כי מנתח ה-PGN נוצר בזמן בנייה.
+    CSS שמיובא ממסך עצל (`room.css`) bun מכניס גם ל-`main.css` – למדידת הטעינה הראשונה מנכים אותו (Vite מפצל נכון).
     צריך `--splitting` (התוכן והחידות הם chunks נפרדים, ונתיב ה-Worker יכול להופיע בכל קובץ JS בפלט). bun לא בונה את ה-Worker מ-`new URL('./kid.worker.ts', import.meta.url)`, ולכן בונים גם את `src/engine/kid.worker.ts` כ-entry נפרד ומחליפים בפלט את `./kid.worker.ts` ב-`./kid.worker.js` (ב-Vite זה קורה לבד). מעתיקים את `public/` לתיקיית הפלט, כולל `engine/`.
-  - בדיקה בדפדפן: Playwright (מותקן גלובלית, `NODE_PATH=$(npm root -g)`) מול `python3 -m http.server 4173 -d <תיקיית הפלט>`. ראו `tests/e2e/phase1.cjs` עד `phase5.cjs` (צריך להריץ את כולן בכל שלב). `phase5.cjs` מדמה קול עברי (`addInitScript` שמחליף את `speechSynthesis`) וקורא את `window.__chessitSounds` לבדיקת צלילים.
-  - בדיקות בטרמינל: `bun --tsconfig-override=<tsconfig זמני> tests/content/check.ts` ו-`tests/themes/check.ts` (ניגודיות הערכות, ניקוי טקסט להקראה). ה-override נדרש כי בלי `node_modules` צריך את המיפוי של chess.js ו-preact. `phase3.cjs` משתמש ב-`?seed=` כדי שתשובות המחשב יהיו קבועות, וב-`window.__chessit` שקיים רק במצב הזה.
+  - בדיקה בדפדפן: Playwright (מותקן גלובלית, `NODE_PATH=$(npm root -g)`) מול `python3 -m http.server 4173 -d <תיקיית הפלט>`. ראו `tests/e2e/phase1.cjs` עד `phase6.cjs` (צריך להריץ את כולן בכל שלב). `phase6.cjs` צריך גם `bun` (מריץ את `tests/net/mock-firebase.ts` על פורט 9010) ו-`python3` עם `cv2` (מפענח את ה-QR). `phase5.cjs` מדמה קול עברי (`addInitScript` שמחליף את `speechSynthesis`) וקורא את `window.__chessitSounds` לבדיקת צלילים.
+  - בדיקות בטרמינל: `bun --tsconfig-override=<tsconfig זמני> tests/content/check.ts`, `tests/themes/check.ts` (ניגודיות הערכות, ניקוי טקסט להקראה) ו-`tests/net/check.ts` (קוד חדר, הודעות, כללים, QR). ה-override נדרש כי בלי `node_modules` צריך את המיפוי של chess.js ו-preact. `phase3.cjs` משתמש ב-`?seed=` כדי שתשובות המחשב יהיו קבועות, וב-`window.__chessit` שקיים רק במצב הזה.
   - סימולציית רמות: `bun --tsconfig-override=<tsconfig זמני> tests/engine/sim.ts` (‏100 משחקים לזוג, כמה דקות). עם `ladder 20 --only-ladder` גם רמות 3–8 מול Stockfish ב-node.
   - שרת ישן מסשן קודם עלול לתפוס את פורט 4173: לבדוק ש-`curl localhost:4173` מחזיר את הבנייה הנוכחית.
   - חבילות מ-GitHub משמשות רק לבדיקה מקומית ולא נכנסות למאגר.
 - גופני Google חסומים בסביבת הבדיקה, ולכן מקומית מוצג גופן חלופי.
+- **Firebase חסום מסביבת העבודה**: חדרים נבדקים מול `?transport=local` (שני דפים באותו הקשר) ומול השרת המדומה (`?db=http://localhost:9010`, מותר רק ב-localhost). עם אחד מהם הלקוח נחשף ב-`window.__chessitRoom`. הבדיקה מול Firebase האמיתי – בבית.

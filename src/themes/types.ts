@@ -52,5 +52,7 @@ export const REQUIRED_VARS = [
   'pc-wl',
   'pc-bf',
   'pc-bl',
-  'pc-bd'
+  'pc-bd',
+  'qr-ink',
+  'qr-paper'
 ] as const;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import {
   deleteProfile,
   getProgress,
@@ -31,6 +31,8 @@ import { activateSettings } from '../profiles/settings';
 import { hasPin } from '../profiles/pin';
 import { stopSpeaking } from '../audio/speech';
 import { lazy } from './lazy';
+import { clearRoomFromUrl, loadOpenRoom, roomFromUrl, type OpenRoom } from '../net/openRoom';
+import type { RoomStart } from '../screens/RoomScreen';
 
 // Not needed for the first screen: separate chunks (see lazy.tsx).
 const GameScreen = lazy(() => import('../screens/GameScreen').then((m) => m.GameScreen));
@@ -42,6 +44,8 @@ const PuzzlesHub = lazy(() => import('../screens/PuzzlesHub').then((m) => m.Puzz
 const ReviewScreen = lazy(() => import('../screens/ReviewScreen').then((m) => m.ReviewScreen));
 const PlacementTest = lazy(() => import('../screens/PlacementTest').then((m) => m.PlacementTest));
 const SettingsScreen = lazy(() => import('../screens/SettingsScreen').then((m) => m.SettingsScreen));
+// Rooms (screens, relay, QR): one chunk, loaded only when someone opens a room.
+const RoomScreen = lazy(() => import('../screens/RoomScreen').then((m) => m.RoomScreen));
 
 type Screen =
   | { name: 'loading' }
@@ -59,7 +63,8 @@ type Screen =
   | { name: 'puzzles' }
   | { name: 'puzzle'; mode: PuzzleMode; back: 'home' | 'puzzles' | 'map' | 'review' }
   | { name: 'review' }
-  | { name: 'placement'; back: 'home' | 'map' };
+  | { name: 'placement'; back: 'home' | 'map' }
+  | { name: 'room'; start: RoomStart };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'loading' });
@@ -67,6 +72,9 @@ export function App() {
   const [active, setActive] = useState<Profile | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [saved, setSaved] = useState<SavedGame | undefined>(undefined);
+  const [openRoom, setOpenRoom] = useState<OpenRoom | undefined>(undefined);
+  /** A room code from a shared link or QR (?room=), handled once a profile is chosen. */
+  const pendingRoom = useRef<string | null>(null);
 
   async function refresh(): Promise<Profile[]> {
     const list = await listProfiles();
@@ -81,8 +89,11 @@ export function App() {
       // The learning content is a separate download (lazy chunk); load it before the first screen.
       await loadContent().catch((e) => console.error('[content] failed to load', e));
       const list = await refresh();
+      pendingRoom.current = roomFromUrl();
+      clearRoomFromUrl();
       const lastId = await getLastProfileId();
-      const last = list.find((p) => p.id === lastId);
+      // With a room link on a shared phone, first ask who is playing.
+      const last = pendingRoom.current && list.length > 1 ? undefined : list.find((p) => p.id === lastId) ?? (pendingRoom.current ? list[0] : undefined);
       if (last && hasPin(last)) {
         setScreen({ name: 'pin', profile: last, then: 'home' });
       } else if (last) {
@@ -114,7 +125,12 @@ export function App() {
     await activateSettings(p);
     setProgress(await getProgress(p.id));
     setSaved(await loadSavedGame());
-    setScreen({ name: 'home' });
+    const room = await loadOpenRoom(p.id);
+    setOpenRoom(room);
+    const code = pendingRoom.current;
+    pendingRoom.current = null;
+    if (code) setScreen({ name: 'room', start: room?.code === code ? { kind: 'resume' } : { kind: 'join', code } });
+    else setScreen({ name: 'home' });
   }
 
   async function handleSave(p: Profile) {
@@ -250,6 +266,9 @@ export function App() {
             profile={active!}
             progress={progress}
             hasSavedGame={!!saved}
+            openRoom={openRoom}
+            onRoom={() => setScreen({ name: 'room', start: { kind: 'menu' } })}
+            onResumeRoom={() => setScreen({ name: 'room', start: { kind: 'resume' } })}
             onSwitchProfile={() => setScreen({ name: 'profiles' })}
             onNewGame={() => setScreen({ name: 'setup' })}
             onResume={resume}
@@ -398,6 +417,18 @@ export function App() {
             profile={active!}
             onExit={() => setScreen(screen.back === 'map' ? { name: 'map' } : { name: 'home' })}
             onMap={() => setScreen({ name: 'map' })}
+            onProgress={setProgress}
+          />
+        );
+
+      case 'room':
+        return (
+          <RoomScreen
+            key={JSON.stringify(screen.start)}
+            profile={active!}
+            start={screen.start}
+            openRoom={openRoom}
+            onExit={() => void backHome()}
             onProgress={setProgress}
           />
         );

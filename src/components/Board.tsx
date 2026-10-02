@@ -414,6 +414,7 @@ export function Board({
         ref={svgRef}
         viewBox={`0 0 ${8 * S} ${8 * S}`}
         class={`board ${interactive ? 'is-live' : ''}`}
+        data-orientation={orientation}
         role="img"
         aria-label="לוח שחמט"
         onPointerDown={onPointerDown}

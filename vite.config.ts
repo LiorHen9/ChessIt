@@ -33,6 +33,9 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // Rooms talk to Firebase (another origin, REST + a live event stream). No route below
+        // matches it, so the Service Worker never caches or answers those requests – they always go
+        // to the network. Keep it that way: a cached room would be an old game.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
         // Stockfish (~1.8MB) is not part of the first load: it is cached the first time
         // someone plays level 3+ or opens a game summary (see runtimeCaching below).

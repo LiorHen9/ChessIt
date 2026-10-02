@@ -36,6 +36,8 @@ export const theme: Theme = {
     'pc-bf': '#1c1f4a',
     'pc-bl': '#0b0d24',
     'pc-bd': '#dfe3ff',
+    'qr-ink': '#000000',
+    'qr-paper': '#ffffff',
     'bg-art': stars('#3f3cbb', 0.22)
   },
   dark: {
@@ -57,6 +59,8 @@ export const theme: Theme = {
     'pc-bf': '#1c1f4a',
     'pc-bl': '#0b0d24',
     'pc-bd': '#dfe3ff',
+    'qr-ink': '#000000',
+    'qr-paper': '#ffffff',
     'bg-art': stars('#ffffff', 0.55)
   },
   pieceSet: 'cburnett',

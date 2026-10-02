@@ -38,6 +38,9 @@
   --pc-bf: #000000;
   --pc-bl: #000000;
   --pc-bd: #ececec;
+  /* The room QR code: always dark on light, in every theme and mode (cameras need it). */
+  --qr-ink: #000000;
+  --qr-paper: #ffffff;
   /* A theme's faint background picture (themes/*.ts); none by default. */
   --bg-art: none;
   --radius: 18px;
@@ -539,7 +542,7 @@ fieldset {
   cursor: pointer;
 }
 
-.action:active:not(.action-soon) {
+.action:active {
   transform: scale(0.99);
 }
 
@@ -587,21 +590,6 @@ fieldset {
 
 .action-resume {
   box-shadow: inset 0 0 0 2px var(--accent), var(--shadow);
-}
-
-.soon {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.action-soon {
-  cursor: default;
-  opacity: 0.6;
-  box-shadow: none;
-  min-height: 64px;
 }
 
 /* ---------- Game ---------- */
@@ -2665,4 +2653,10 @@ body {
     opacity: 0;
     transform: translate(0, 440px) rotate(calc(var(--spin) + 90deg));
   }
+}
+
+/* ---------- Rooms (phase 6): the home card. The room screens have their own room.css. ---------- */
+
+.action-room {
+  box-shadow: inset 0 0 0 2px var(--brand-soft), var(--shadow);
 }

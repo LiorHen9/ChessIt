@@ -25,7 +25,9 @@ export const CLEAN: Theme = {
     'pc-wl': '#000000',
     'pc-bf': '#000000',
     'pc-bl': '#000000',
-    'pc-bd': '#ececec'
+    'pc-bd': '#ececec',
+    'qr-ink': '#000000',
+    'qr-paper': '#ffffff'
   },
   dark: {
     bg: '#151a16',
@@ -45,7 +47,9 @@ export const CLEAN: Theme = {
     'pc-wl': '#000000',
     'pc-bf': '#000000',
     'pc-bl': '#000000',
-    'pc-bd': '#ececec'
+    'pc-bd': '#ececec',
+    'qr-ink': '#000000',
+    'qr-paper': '#ffffff'
   },
   pieceSet: 'cburnett',
   celebrate: 'confetti',
