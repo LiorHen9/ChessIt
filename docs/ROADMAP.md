@@ -17,9 +17,9 @@ flowchart LR
 
 ## שלב 0 – תשתית
 
-- [ ] מאגר ציבורי ב-GitHub עם רישיון GPL-3 (קובץ הרישיון מוכן)
+- [x] מאגר ציבורי ב-GitHub עם רישיון GPL-3
 - [x] פרויקט Vite + TypeScript + Preact
-- [ ] פריסה אוטומטית ל-GitHub Pages דרך GitHub Actions (קובץ ה-workflow מוכן, ממתין להרצה ראשונה)
+- [x] פריסה אוטומטית ל-GitHub Pages דרך GitHub Actions
 - [x] מעטפת PWA: manifest, אייקונים, Service Worker
 - [x] ממשק RTL בסיסי וגופן עברי
 
