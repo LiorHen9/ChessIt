@@ -1,0 +1,66 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      ".indexOn": ["touched"],
+      "$code": {
+        ".read": "$code.length == 5 && $code.matches(/^[ACDEFGHJKMNPQRTUVWXY3479]+$/)",
+        ".write": "$code.length == 5 && $code.matches(/^[ACDEFGHJKMNPQRTUVWXY3479]+$/) && (newData.exists() ? (!data.exists() || newData.child('created').val() == data.child('created').val()) : (data.child('touched').val() < now - 7200000 || (data.child('seats/host/left').val() == true && (!data.child('seats/guest').exists() || data.child('seats/guest/left').val() == true))))",
+        ".validate": "newData.hasChildren(['v', 'created', 'touched', 'seats', 'game']) && newData.child('seats').hasChild('host')",
+        "v": { ".validate": "newData.val() == 1" },
+        "created": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "touched": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "seats": {
+          "$seat": {
+            ".validate": "($seat == 'host' || $seat == 'guest') && newData.hasChildren(['name', 'avatar', 'ticket', 'seen']) && (!data.exists() || newData.child('ticket').val() == data.child('ticket').val())",
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24" },
+            "avatar": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 16" },
+            "gender": { ".validate": "newData.val() == 'boy' || newData.val() == 'girl' || newData.val() == 'other'" },
+            "ticket": { ".validate": "newData.isString() && newData.val().length >= 16 && newData.val().length <= 40 && newData.val().matches(/^[A-Za-z0-9]+$/)" },
+            "seen": { ".validate": "newData.isNumber() && newData.val() <= now" },
+            "away": { ".validate": "newData.isBoolean()" },
+            "left": { ".validate": "newData.isBoolean()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "game": {
+          ".validate": "newData.hasChildren(['round', 'white', 'start', 'moves', 'ply']) && (!data.exists() ? (newData.child('ply').val() == 0 && newData.child('moves').val() == '') : (newData.child('round').val() == data.child('round').val() + 1 ? (newData.child('ply').val() == 0 && newData.child('moves').val() == '') : (newData.child('round').val() == data.child('round').val() && newData.child('white').val() == data.child('white').val() && newData.child('start').val() == data.child('start').val() && ((newData.child('ply').val() == data.child('ply').val() && newData.child('moves').val() == data.child('moves').val()) || (newData.child('ply').val() == data.child('ply').val() + 1 && !data.child('end').exists() && newData.child('moves').val().beginsWith(data.child('moves').val()) && newData.child('moves').val().length <= data.child('moves').val().length + 6) || (newData.child('ply').val() < data.child('ply').val() && data.child('moves').val().beginsWith(newData.child('moves').val()))))))",
+          "round": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000" },
+          "white": { ".validate": "newData.val() == 'host' || newData.val() == 'guest'" },
+          "start": { ".validate": "newData.isString() && newData.val().length <= 100 && newData.val().matches(/^[-1-8a-hpnbrqkPNBRQKw\\/ ]+$/)" },
+          "moves": { ".validate": "newData.isString() && newData.val().length <= 4000 && newData.val().matches(/^([a-h][1-8][a-h][1-8][qrbn]? )*$/)" },
+          "ply": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 700" },
+          "draw": { ".validate": "newData.val() == 'host' || newData.val() == 'guest'" },
+          "end": {
+            ".validate": "newData.hasChildren(['reason', 'by'])",
+            "reason": { ".validate": "newData.val() == 'resign' || newData.val() == 'agreed'" },
+            "by": { ".validate": "newData.val() == 'host' || newData.val() == 'guest'" },
+            "$other": { ".validate": false }
+          },
+          "again": {
+            "host": { ".validate": "newData.isNumber()" },
+            "guest": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          },
+          "$other": { ".validate": false }
+        },
+        "hc": {
+          ".validate": "newData.hasChildren(['seat', 'pieces'])",
+          "seat": { ".validate": "newData.val() == 'host' || newData.val() == 'guest'" },
+          "pieces": { ".validate": "newData.isString() && newData.val().length <= 30 && newData.val().matches(/^(q|ra|rh|nb|ng|bc|bf)(,(q|ra|rh|nb|ng|bc|bf))*$/)" },
+          "$other": { ".validate": false }
+        },
+        "react": {
+          "$seat": {
+            ".validate": "($seat == 'host' || $seat == 'guest') && newData.hasChildren(['id', 'n'])",
+            "id": { ".validate": "newData.val() == 'clap' || newData.val() == 'wow' || newData.val() == 'oops' || newData.val() == 'gg' || newData.val() == 'heart' || newData.val() == 'fire'" },
+            "n": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
