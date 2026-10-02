@@ -76,7 +76,7 @@ function ReviewCard({
         </span>
       </header>
       <div class="review-board">
-        <Board
+        <Board quiet
           position={chessPosition(new Chess(r.fenBefore))}
           orientation={game.human}
           interactive={false}

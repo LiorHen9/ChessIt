@@ -4,7 +4,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Chess, type Move, type PieceSymbol, type Square } from 'chess.js';
 import { Board, type BoardMarks, type LastMove } from './Board';
-import { RichText } from './RichText';
+import { Feedback, type Message, type Tone } from './Speak';
+import { playSound } from '../audio/sound';
 import { chessPosition, checkedKingSquare, PIECE_NAME } from '../chess/rules';
 import { engineFor } from '../engine/engine';
 import { kidMove } from '../engine/kid';
@@ -61,7 +62,6 @@ interface Props {
   onMistake?: (total: number) => void;
 }
 
-type Tone = 'info' | 'good' | 'bad';
 
 const WAY_NAME: Record<EscapeWay, string> = { move: 'בריחה 🏃', block: 'חסימה 🧱', capture: 'אכילה 😋' };
 const WAY_DO: Record<EscapeWay, string> = { move: 'להזיז את המלך', block: 'לחסום', capture: 'לאכול את התוקף' };
@@ -94,7 +94,7 @@ export function RealTask({ task, profile, mode = 'practice', wrongText, allowHin
   const [busy, setBusy] = useState(!!task.intro);
   const [done, setDone] = useState(false);
   const [stuck, setStuck] = useState(false);
-  const [message, setMessage] = useState<{ text: string; tone: Tone; id: number } | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [mistakes, setMistakes] = useState(0);
   const [hints, setHints] = useState(0);
   const [learnerMoves, setLearnerMoves] = useState(0);
@@ -183,6 +183,7 @@ export function RealTask({ task, profile, mode = 'practice', wrongText, allowHin
     setBusy(true);
     setBad([uci.slice(2, 4) as Square]);
     if (extraMarks?.dots) setDots(extraMarks.dots);
+    later(() => playSound('wrong'), 160);
     notify(text, 'bad');
     if (mode === 'test') {
       later(() => onFail?.(), UNDO_MS);
@@ -521,9 +522,7 @@ export function RealTask({ task, profile, mode = 'practice', wrongText, allowHin
         onMove={handleMove}
         onIllegal={handleIllegal}
       />
-      <p class={`feedback ${message ? `is-${message.tone}` : ''}`} aria-live="polite" key={message?.id ?? 0}>
-        {message ? <RichText text={message.text} /> : status ? <span class="feedback-how">{status}</span> : ' '}
-      </p>
+      <Feedback message={message} idle={status ? <span class="feedback-how">{status}</span> : undefined} />
       {mode === 'practice' && (
         <div class="row drill-actions">
           {allowHints && (

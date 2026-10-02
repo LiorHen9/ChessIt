@@ -1,8 +1,11 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Color, PieceSymbol, Square } from 'chess.js';
-import { PIECE_GLYPH, PIECE_NAME } from '../chess/rules';
+import { PIECE_NAME } from '../chess/rules';
+import { PieceIcon, PieceUse } from './Piece';
+import { playSound } from '../audio/sound';
 
 const S = 100; // one square in SVG units; the board is 800×800
+const PAD = 4; // space around a piece inside its square
 const FILES = 'abcdefgh';
 
 export interface LastMove {
@@ -78,6 +81,8 @@ interface BoardProps {
   onSquareTap?: (sq: Square) => void;
   /** The player tried to move the selected piece somewhere it cannot go. */
   onIllegal?: (from: Square, to: Square) => void;
+  /** No move / capture / check sounds (demos, small boards). */
+  quiet?: boolean;
 }
 
 interface Drag {
@@ -130,12 +135,31 @@ export function Board({
   onMove,
   marks = {},
   onSquareTap,
-  onIllegal
+  onIllegal,
+  quiet = false
 }: BoardProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [promotion, setPromotion] = useState<{ from: Square; to: Square; dragged: boolean; color: Color } | null>(null);
+
+  // Sounds follow what the board shows: a new last move is a move, a capture (fewer pieces) or a
+  // check. Take-backs and resets (more pieces, or no move) stay silent.
+  let pieceCount = 0;
+  for (const sq of ALL_SQUARES) if (position.get(sq)) pieceCount++;
+  const heard = useRef<{ id: number | null; count: number }>({ id: lastMove?.id ?? null, count: pieceCount });
+  useEffect(() => {
+    const prev = heard.current;
+    const id = lastMove?.id ?? null;
+    heard.current = { id, count: pieceCount };
+    if (quiet || id === null || id === prev.id || pieceCount > prev.count) return;
+    playSound(checkSquare ? 'check' : pieceCount < prev.count ? 'capture' : 'move');
+  }, [lastMove?.id, pieceCount]);
+
+  function illegal(from: Square, to: Square) {
+    if (!quiet) playSound('wrong');
+    onIllegal?.(from, to);
+  }
 
   const legal = selected ? position.movesFrom(selected) : [];
   const targets = new Map(legal.map((m) => [m.to, !!m.captured]));
@@ -148,7 +172,7 @@ export function Board({
   function tryMove(from: Square, to: Square, dragged: boolean): boolean {
     const options = position.movesFrom(from).filter((m) => m.to === to);
     if (options.length === 0) {
-      onIllegal?.(from, to);
+      illegal(from, to);
       return false;
     }
     if (options.some((m) => m.promotion)) {
@@ -179,7 +203,7 @@ export function Board({
       setDrag({ pointerId: e.pointerId, from: sq, x, y, startX: x, startY: y, moved: false, wasSelected: selected === sq });
       setSelected(sq);
     } else {
-      if (selected) onIllegal?.(selected, sq);
+      if (selected) illegal(selected, sq);
       setSelected(null);
     }
   }
@@ -366,10 +390,8 @@ export function Board({
       cls += ' piece-slide';
     }
     return [
-      <g key={lastMove?.to === sq ? `${sq}-${lastMove.id}` : sq} class={cls} style={style}>
-        <text x={x + S / 2} y={y + S / 2} text-anchor="middle" dominant-baseline="central">
-          {PIECE_GLYPH[p.type] + '︎'}
-        </text>
+      <g key={lastMove?.to === sq ? `${sq}-${lastMove.id}` : sq} class={cls} style={style} data-piece={`${p.color}${p.type.toUpperCase()}`}>
+        <PieceUse color={p.color} type={p.type} x={x + PAD} y={y + PAD} size={S - 2 * PAD} />
       </g>
     ];
   });
@@ -380,9 +402,7 @@ export function Board({
     if (p) {
       dragged = (
         <g class={`piece piece-${p.color} piece-dragging`}>
-          <text x={drag.x} y={drag.y - S * 0.35} text-anchor="middle" dominant-baseline="central">
-            {PIECE_GLYPH[p.type] + '︎'}
-          </text>
+          <PieceUse color={p.color} type={p.type} x={drag.x - S * 0.6} y={drag.y - S * 0.35 - S * 0.6} size={S * 1.2} />
         </g>
       );
     }
@@ -437,7 +457,7 @@ export function Board({
           <div class="promo-options">
             {(['q', 'r', 'b', 'n'] as PieceSymbol[]).map((t) => (
               <button key={t} class="promo-btn" onClick={() => choosePromotion(t)}>
-                <span class={`promo-glyph piece-${promotion.color}`}>{PIECE_GLYPH[t] + '︎'}</span>
+                <PieceIcon color={promotion.color} type={t} class="promo-glyph" />
                 <span>{PIECE_NAME[t]}</span>
               </button>
             ))}

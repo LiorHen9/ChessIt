@@ -2,6 +2,7 @@
 // puzzle, a puzzle due for review, or a short set at the end of a world.
 import { useEffect, useState } from 'preact/hooks';
 import { Confetti } from '../components/Confetti';
+import { playSound } from '../audio/sound';
 import { RealTask, type RealResult } from '../components/RealTask';
 import { mistakesLine, TopBar } from '../components/StationParts';
 import { COLOR_NAME } from '../chess/rules';
@@ -70,6 +71,7 @@ export function PuzzleScreen({ profile, progress, mode, onExit, exitLabel, onPro
 
   function solved(r: RealResult) {
     if (!puzzle) return;
+    playSound('done');
     setResult(r);
     setSolvedHere((s) => [...s, puzzle.id]);
     const clean = r.mistakes === 0 && r.hints === 0;

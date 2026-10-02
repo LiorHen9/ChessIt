@@ -2,9 +2,10 @@
 // played with RealTask, then the result card.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { RichText } from '../components/RichText';
+import { NarrationHelp, SpeakButton, useAutoSpeak } from '../components/Speak';
 import { RealTask, type RealResult } from '../components/RealTask';
 import { DoneDialog, LessonDemo, mistakesLine, TopBar } from '../components/StationParts';
-import { PIECE_GLYPH } from '../chess/rules';
+import { PieceIcon } from '../components/Piece';
 import { findStation, WORLDS } from '../content/index';
 import { isUnlocked, nextStationId, recordStation, starsFor, type Stars } from '../learning/progress';
 import { say } from '../learning/text';
@@ -87,9 +88,15 @@ export function RealStation({ profile, progress, onExit, onOpen, onProgress, wor
   }
 
   const character = world.character;
+  const helloText = character && index === 0 ? `${character.name}: ${say(character.hello, profile)}` : '';
+  const introText = `${helloText} ${say(station.text, profile)}`.trim();
+  const r = rounds[Math.min(round, rounds.length - 1)];
+  const taskText = say(r.text ?? (station.type === 'lesson' && station.task ? station.task : station.text), profile);
+  useAutoSpeak(phase === 'intro' && hasDemo ? introText : phase === 'play' && !between ? taskText : null, `${phase}-${round}-${attempt}-${between}`);
+
   const avatar = (
     <span class="char-avatar" aria-hidden="true">
-      {character ? PIECE_GLYPH[character.piece] + '︎' : world.icon}
+      {character ? <PieceIcon color="w" type={character.piece} /> : world.icon}
     </span>
   );
 
@@ -109,7 +116,9 @@ export function RealStation({ profile, progress, onExit, onOpen, onProgress, wor
               <RichText text={say(station.text, profile)} />
             </p>
           </div>
+          <SpeakButton text={introText} />
         </section>
+        <NarrationHelp />
         <LessonDemo station={station} />
         <button class="btn btn-primary btn-big go-btn" onClick={() => setPhase('play')}>
           עכשיו תורך! ✋
@@ -118,8 +127,6 @@ export function RealStation({ profile, progress, onExit, onOpen, onProgress, wor
     );
   }
 
-  const r = rounds[Math.min(round, rounds.length - 1)];
-  const taskText = say(r.text ?? (station.type === 'lesson' && station.task ? station.task : station.text), profile);
   const mistakes = mistakesSoFar + live;
   const next = nextStationId(WORLDS, station.id);
   const nextFound = next ? findStation(next) : null;
@@ -141,7 +148,9 @@ export function RealStation({ profile, progress, onExit, onOpen, onProgress, wor
             <RichText text={taskText} />
           </p>
         </div>
+        <SpeakButton text={taskText} />
       </section>
+      <NarrationHelp />
 
       <div class="drill-status">
         {rounds.length > 1 && (

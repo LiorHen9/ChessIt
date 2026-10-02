@@ -32,3 +32,5 @@ GPL-3.0-or-later. ראו [LICENSE](LICENSE).
 הרישיון נבחר כדי לאפשר שימוש במנוע Stockfish, שמופץ גם הוא ב-GPL-3.
 
 החידות לקוחות ממאגר החידות הפתוח של [Lichess](https://database.lichess.org/#puzzles) (‏CC0). כדי לבנות אותן מחדש מהמאגר המלא: `bun scripts/puzzles.ts lichess_db_puzzle.csv` (ההוראות בראש הסקריפט).
+
+ציורי הכלים הם הסט "cburnett" של Colin M.L. Burnett (‏GPLv2+), כפי שהוא מופיע ב-[lichess-org/lila](https://github.com/lichess-org/lila/tree/master/public/piece/cburnett). הצבעים הוחלפו במשתני CSS כדי שכל ערכת נושא תוכל לצבוע אותם (`src/themes/pieceSprite.ts`).

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { PieceSymbol, Square } from 'chess.js';
 import { Board, type BoardMarks, type LastMove } from '../components/Board';
 import { RichText } from '../components/RichText';
+import { Feedback, NarrationHelp, SpeakButton, useAutoSpeak, type Message, type Tone } from '../components/Speak';
+import { playSound } from '../audio/sound';
 import { DoneDialog, drillPosition, LessonDemo, mistakesLine, TopBar } from '../components/StationParts';
-import { PIECE_GLYPH } from '../chess/rules';
+import { PieceIcon } from '../components/Piece';
 import { findStation, WORLDS } from '../content/index';
 import { sq as makeSquare, type DMove } from '../learning/drill';
 import { illegalReason } from '../learning/feedback';
@@ -12,7 +14,10 @@ import { isUnlocked, nextStationId, recordStation, starsFor, type Stars } from '
 import { gendered, say } from '../learning/text';
 import { isRealGoal, type Station, type World } from '../learning/types';
 import type { Profile, Progress } from '../profiles/profiles';
-import { RealStation } from './RealStation';
+import { lazy } from '../app/lazy';
+
+// Real-position stations (worlds 3–8) bring chess.js tasks, the coach and the engines: a separate chunk.
+const RealStation = lazy(() => import('./RealStation').then((m) => m.RealStation));
 
 export interface StationProps {
   profile: Profile;
@@ -55,7 +60,6 @@ const GOAL_ICON: Partial<Record<Station['goal']['kind'], string>> = {
 const GOOD_WORDS = ['יפה!', 'נכון!', 'מצוין!', 'יש!', 'בדיוק!'];
 
 type Phase = 'intro' | 'play' | 'done';
-type Tone = 'info' | 'good' | 'bad';
 
 interface RunProps extends Props {
   world: World;
@@ -84,7 +88,7 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
   const [mistakes, setMistakes] = useState(0);
   const [bad, setBad] = useState<Square | null>(null);
   const [burst, setBurst] = useState<{ sq: Square; id: number } | null>(null);
-  const [message, setMessage] = useState<{ text: string; tone: Tone; id: number } | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
   const [stuck, setStuck] = useState(false);
   const [result, setResult] = useState<{ stars: Stars; count: number } | null>(null);
   const [savedProgress, setSavedProgress] = useState<Progress | null>(progress);
@@ -100,9 +104,9 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
   }
 
   const msgId = useRef(0);
-  function notify(text: string, tone: Tone = 'info') {
+  function notify(text: string, tone: Tone = 'info', speech?: string) {
     msgId.current += 1;
-    setMessage({ text, tone, id: msgId.current });
+    setMessage({ text, tone, id: msgId.current, speech });
   }
 
   function finish(count: number) {
@@ -144,6 +148,7 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
 
     if (next.collected.length > state.collected.length) {
       setBurst({ sq: to, id: next.moves });
+      playSound('star');
       notify('⭐ ' + GOOD_WORDS[next.moves % GOOD_WORDS.length], 'good');
     } else if (move.captured) {
       notify('😋 ' + 'אכלת!', 'good');
@@ -175,10 +180,15 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
       const now = [...tapped, sq];
       setTapped(now);
       setHintSquare(null);
-      notify('✓ ' + GOOD_WORDS[now.length % GOOD_WORDS.length], 'good');
+      playSound('star');
+      const word = GOOD_WORDS[now.length % GOOD_WORDS.length];
+      // Non-readers hear the next square too (it is also shown big above the board).
+      const upNext = goal.ordered ? goal.squares[now.length] : undefined;
+      notify('✓ ' + word, 'good', upNext ? `${word} עכשיו ${upNext}` : undefined);
       if (now.length === goal.squares.length) finish(mistakes);
     } else {
       setMistakes((m) => m + 1);
+      playSound('wrong');
       setBad(sq);
       later(() => setBad(null), 700);
       notify(
@@ -207,10 +217,18 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
 
   // ----- Rendering -----
 
+  const helloText = world.character && index === 0 ? `${world.character.name}: ${say(world.character.hello, profile)}` : '';
+  const introText = `${helloText} ${say(station.text, profile)}`.trim();
+  const taskText = say(station.type === 'lesson' && station.task ? station.task : station.text, profile);
+  const ordered = goal.kind === 'tapSquares' && goal.ordered ? goal.squares[tapped.length] : null;
+  const taskSpeech = ordered && tapped.length === 0 ? `${taskText} ${ordered}` : taskText;
+  // Read the explanation, then the task, aloud when the profile has narration on.
+  useAutoSpeak(phase === 'intro' && hasDemo ? introText : phase === 'play' ? taskSpeech : null, `${phase}-${attempt}`);
+
   const character = world.character;
   const avatar = (
     <span class="char-avatar" aria-hidden="true">
-      {character ? PIECE_GLYPH[character.piece] + '︎' : world.icon}
+      {character ? <PieceIcon color="w" type={character.piece} /> : world.icon}
     </span>
   );
 
@@ -230,7 +248,9 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
               <RichText text={say(station.text, profile)} />
             </p>
           </div>
+          <SpeakButton text={introText} />
         </section>
+        <NarrationHelp />
         <LessonDemo station={station} />
         <button class="btn btn-primary btn-big go-btn" onClick={() => setPhase('play')}>
           עכשיו תורך! ✋
@@ -239,7 +259,6 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
     );
   }
 
-  const taskText = say(station.type === 'lesson' && station.task ? station.task : station.text, profile);
   const learnerSquares = [...state.pieces.entries()].filter(([, p]) => p.color === state.learner).map(([s]) => s);
 
   const marks: BoardMarks = { burst: burst ?? undefined };
@@ -283,7 +302,6 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
     progressChip = `👆 ${doneCount}/${total}`;
   }
 
-  const ordered = goal.kind === 'tapSquares' && goal.ordered ? goal.squares[tapped.length] : null;
   const next = nextStationId(WORLDS, station.id);
   const nextFound = next ? findStation(next) : null;
   const nextIsNewWorld = !!nextFound && nextFound.world.id !== world.id;
@@ -308,7 +326,9 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
             </p>
           )}
         </div>
+        <SpeakButton text={ordered ? `${taskText} ${ordered}` : taskText} />
       </section>
+      <NarrationHelp />
 
       <div class="drill-status">
         <span class="chip">{isTap ? `טעויות: ${mistakes}` : `מסעים: ${state.moves}`}</span>
@@ -336,15 +356,10 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
         onIllegal={handleIllegal}
       />
 
-      <p class={`feedback ${message ? `is-${message.tone}` : ''}`} aria-live="polite" key={message?.id}>
-        {message ? (
-          <RichText text={message.text} />
-        ) : !isTap && state.moves === 0 ? (
-          <span class="feedback-how">{g('👆 {גע|געי} בכלי, ואז במשבצת שאליה הוא ילך')}</span>
-        ) : (
-          '\u00a0'
-        )}
-      </p>
+      <Feedback
+        message={message}
+        idle={!isTap && state.moves === 0 ? <span class="feedback-how">{g('👆 {גע|געי} בכלי, ואז במשבצת שאליה הוא ילך')}</span> : undefined}
+      />
 
       <div class="row drill-actions">
         <button class="btn btn-secondary" onClick={hint} disabled={!!result || stuck || !!hintMove || !!hintSquare}>

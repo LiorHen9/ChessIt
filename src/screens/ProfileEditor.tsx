@@ -1,4 +1,6 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
+import { ThemePicker } from '../components/ThemePicker';
+import { applyTheme, CLEAN, loadTheme, suggestTheme, type Theme } from '../themes/index';
 import {
   AGE_GROUPS,
   AVATARS,
@@ -28,6 +30,19 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(profile?.ageGroup ?? null);
   const [gender, setGender] = useState<Gender | undefined>(profile?.gender);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // A new profile follows the suggestion for its age until a theme is picked by hand.
+  const [pickedTheme, setPickedTheme] = useState<string | null>(profile?.themeId ?? null);
+  const suggested = suggestTheme(ageGroup, gender);
+  const themeId = pickedTheme ?? suggested;
+  const [theme, setTheme] = useState<Theme>(CLEAN);
+
+  // Live preview: the whole screen takes the theme being chosen.
+  useEffect(() => {
+    void applyTheme(themeId);
+    void loadTheme(themeId).then(setTheme);
+  }, [themeId]);
+
+  const avatars = [...new Set([...theme.avatars, ...AVATARS])];
 
   const trimmed = name.trim();
   const valid = trimmed.length > 0 && ageGroup !== null;
@@ -41,7 +56,9 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }
       avatar,
       ageGroup: ageGroup!,
       gender,
-      themeId: profile?.themeId ?? 'clean',
+      themeId,
+      pinHash: profile?.pinHash,
+      pinSalt: profile?.pinSalt,
       createdAt: profile?.createdAt ?? Date.now()
     });
   }
@@ -81,7 +98,7 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }
         <fieldset class="field">
           <legend class="field-label">בחירת דמות</legend>
           <div class="avatar-grid">
-            {AVATARS.map((a) => (
+            {avatars.map((a) => (
               <button
                 type="button"
                 key={a}
@@ -133,6 +150,13 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }
               </button>
             ))}
           </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend class="field-label">
+            ערכת נושא <span class="optional">(אפשר לשנות בכל רגע)</span>
+          </legend>
+          <ThemePicker value={themeId} onChange={setPickedTheme} suggested={suggested} />
         </fieldset>
 
         <button class="btn btn-primary btn-big" type="submit" disabled={!valid}>

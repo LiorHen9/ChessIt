@@ -24,7 +24,11 @@
 ## טכנולוגיה ומבנה
 
 - Vite + TypeScript (strict) + Preact. חוקי השחמט: chess.js 1.x.
-- `src/app/App.tsx` – ניתוב בין מסכים (מכונת מצבים פשוטה, בלי ספריית ניתוב).
+- `src/app/App.tsx` – ניתוב בין מסכים (מכונת מצבים פשוטה, בלי ספריית ניתוב). מסכים שלא צריך בכניסה נטענים בעצלות דרך `lazy()` ב-`src/app/lazy.tsx` (משחק, סיכום, חידות, חזרה, מבחן כניסה, הגדרות, תחנות של עמדות אמיתיות). מסך חדש שלא צריך מיד – גם הוא דרך `lazy()`, כדי לשמור על הטעינה הראשונה (היום כ-259KB, התקרה 300KB).
+- `src/themes/` – ערכות נושא: `index.ts` (רשימה, `applyTheme`, `useTheme`, `suggestTheme`), `clean.ts` מוטמעת, `space.ts`/`forest.ts` נטענות בעצלות, `pieceSprite.ts` (ציורי הכלים). "איך מוסיפים ערכה" ב-ARCHITECTURE.md.
+- `src/components/Piece.tsx` – הכלים ב-SVG: `PieceSprite` (פעם אחת ב-App), `PieceUse` בתוך הלוח, `PieceIcon` ב-HTML. צבעים ממשתני `--pc-*` של הערכה.
+- `src/audio/sound.ts` – צלילים ב-Web Audio (`playSound`). הלוח משמיע מסע/אכילה/שח לבד; `quiet` ללוחות הדגמה. `src/audio/speech.ts` – הקראה בעברית, רק עם קול עברי (`speak`, `autoSpeak`, `cleanForSpeech`). `src/components/Speak.tsx` – `SpeakButton`, `Feedback` (שורת המשוב, מוקראת), `NarrationHelp`, `useAutoSpeak`.
+- `src/profiles/settings.ts` – הגדרות לכל פרופיל (צלילים, הקראה), במאגר `settings`. `src/profiles/pin.ts` – PIN כ-hash. `src/screens/PinScreen.tsx`, `src/screens/SettingsScreen.tsx`.
 - `src/screens/` – מסך לכל מסך. `src/components/` – Board, PlayerBar ועוד.
 - `src/chess/rules.ts` – עזרים מעל chess.js (שמות כלים בעברית, תוצאות משחק, כלים שנאכלו).
 - `src/profiles/profiles.ts` – פרופילים, התקדמות, סטטיסטיקה, `byGender`.
@@ -44,7 +48,9 @@
 - **פנייה לפי מין**: טקסט שתלוי בפרופיל עובר דרך `byGender(profile, 'זכר', 'נקבה')`. בלי מין מוגדר מוצגת צורה כפולה ("ניצח/ה").
 - **SVG ב-Preact**: מאפיינים בכתיב kebab-case (`text-anchor`, `dominant-baseline`), לא camelCase.
 - **גדלי מגע**: לפחות 44px. טקסטים קצרים; לגיל 5–7 משפט אחד.
-- **סמלי כלים**: תווי Unicode עם `︎` (כדי שלא יוצגו כאימוג'י באייפון). ציורי SVG אחידים יגיעו בשלב 5.
+- **כלים**: על המסך תמיד `PieceIcon`/`PieceUse` (SVG), לא תווי Unicode. `PIECE_GLYPH` נשאר רק לסמלים בתוך טקסט התוכן (`RichText` מוסיף להם `︎` כדי שלא יוצגו כאימוג'י באייפון).
+- **צבעים**: רק משתני CSS (`var(--ink)`, `var(--sq-dark)` ...), כדי שכל ערכה תעבוד. משתנה חדש – להגדיר ב-`:root`, ב-`clean.ts` ובכל ערכה, ולהריץ `tests/themes/check.ts`.
+- **טקסט שילד צריך לשמוע**: משוב דרך `Feedback`, ומשימה חדשה עם `SpeakButton` ו-`useAutoSpeak`.
 - **commit**: הודעה באנגלית, ובסופה שורות הייחוס שהסביבה מגדירה.
 
 ## בנייה ובדיקה
@@ -54,7 +60,8 @@
   - בדיקת טיפוסים: `tsc -p <tsconfig זמני>` (שגיאת ה-import של `styles.css` צפויה מקומית ואפשר להתעלם ממנה).
   - בנייה: `bun build src/main.tsx` עם אותם `paths`. ל-chess.js צריך קובץ דמה `src/pgn.ts`, כי מנתח ה-PGN נוצר בזמן בנייה.
     צריך `--splitting` (התוכן והחידות הם chunks נפרדים, ונתיב ה-Worker יכול להופיע בכל קובץ JS בפלט). bun לא בונה את ה-Worker מ-`new URL('./kid.worker.ts', import.meta.url)`, ולכן בונים גם את `src/engine/kid.worker.ts` כ-entry נפרד ומחליפים בפלט את `./kid.worker.ts` ב-`./kid.worker.js` (ב-Vite זה קורה לבד). מעתיקים את `public/` לתיקיית הפלט, כולל `engine/`.
-  - בדיקה בדפדפן: Playwright (מותקן גלובלית, `NODE_PATH=$(npm root -g)`) מול `python3 -m http.server 4173 -d <תיקיית הפלט>`. ראו `tests/e2e/phase1.cjs` עד `phase4.cjs` (צריך להריץ את כולן בכל שלב). `phase3.cjs` משתמש ב-`?seed=` כדי שתשובות המחשב יהיו קבועות, וב-`window.__chessit` שקיים רק במצב הזה.
+  - בדיקה בדפדפן: Playwright (מותקן גלובלית, `NODE_PATH=$(npm root -g)`) מול `python3 -m http.server 4173 -d <תיקיית הפלט>`. ראו `tests/e2e/phase1.cjs` עד `phase5.cjs` (צריך להריץ את כולן בכל שלב). `phase5.cjs` מדמה קול עברי (`addInitScript` שמחליף את `speechSynthesis`) וקורא את `window.__chessitSounds` לבדיקת צלילים.
+  - בדיקות בטרמינל: `bun --tsconfig-override=<tsconfig זמני> tests/content/check.ts` ו-`tests/themes/check.ts` (ניגודיות הערכות, ניקוי טקסט להקראה). ה-override נדרש כי בלי `node_modules` צריך את המיפוי של chess.js ו-preact. `phase3.cjs` משתמש ב-`?seed=` כדי שתשובות המחשב יהיו קבועות, וב-`window.__chessit` שקיים רק במצב הזה.
   - סימולציית רמות: `bun --tsconfig-override=<tsconfig זמני> tests/engine/sim.ts` (‏100 משחקים לזוג, כמה דקות). עם `ladder 20 --only-ladder` גם רמות 3–8 מול Stockfish ב-node.
   - שרת ישן מסשן קודם עלול לתפוס את פורט 4173: לבדוק ש-`curl localhost:4173` מחזיר את הבנייה הנוכחית.
   - חבילות מ-GitHub משמשות רק לבדיקה מקומית ולא נכנסות למאגר.

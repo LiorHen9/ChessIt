@@ -1,4 +1,7 @@
-import { byGender, type Profile, type Progress } from '../profiles/profiles';
+import { useState } from 'preact/hooks';
+import { byGender, saveProfile, type Profile, type Progress } from '../profiles/profiles';
+import { ThemePicker } from '../components/ThemePicker';
+import { applyTheme, suggestTheme } from '../themes/index';
 import { WORLDS } from '../content/index';
 import { localDay } from '../content/puzzles/index';
 import { totals } from '../learning/progress';
@@ -18,6 +21,9 @@ interface Props {
   onPuzzles: () => void;
   onReview: () => void;
   onPlacement: () => void;
+  onSettings: () => void;
+  /** The profile changed here (theme) and was saved. */
+  onProfile: (p: Profile) => void;
 }
 
 const SOON = [{ icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }];
@@ -35,19 +41,28 @@ export function Home(props: Props) {
   const path = totals(WORLDS, progress);
   const pct = path.count ? Math.round((path.done / path.count) * 100) : 0;
   const cpu = levelInfo(progress?.engineLevel ?? 1);
+  const [themes, setThemes] = useState(false);
   return (
     <main class="screen">
       <header class="home-head">
-        <button class="who" onClick={onSwitchProfile} aria-label="החלפת פרופיל">
-          <span class="avatar avatar-md" aria-hidden="true">
-            {profile.avatar}
-          </span>
-          <span class="who-text">
-            <span class="who-hello">שלום,</span>
-            <span class="who-name">{profile.name}</span>
-          </span>
-          <span class="who-switch">החלפה</span>
-        </button>
+        <div class="home-top">
+          <button class="who" onClick={onSwitchProfile} aria-label="החלפת פרופיל">
+            <span class="avatar avatar-md" aria-hidden="true">
+              {profile.avatar}
+            </span>
+            <span class="who-text">
+              <span class="who-hello">שלום,</span>
+              <span class="who-name">{profile.name}</span>
+            </span>
+            <span class="who-switch">החלפה</span>
+          </button>
+          <button class="icon-btn" data-testid="home-theme" onClick={() => setThemes(true)} aria-label="החלפת ערכת נושא">
+            🎨
+          </button>
+          <button class="icon-btn" data-testid="home-settings" onClick={props.onSettings} aria-label="הגדרות">
+            ⚙️
+          </button>
+        </div>
         {stats && stats.games > 0 && (
           <p class="stats">
             {stats.games} משחקים · {stats.wins} ניצחונות{stats.draws > 0 ? ` · ${stats.draws} תיקו` : ''}
@@ -165,6 +180,26 @@ export function Home(props: Props) {
           </span>
         </span>
       </button>
+
+      {themes && (
+        <div class="sheet-backdrop" onClick={() => setThemes(false)}>
+          <section class="card sheet" role="dialog" aria-label="ערכת נושא" onClick={(e) => e.stopPropagation()}>
+            <h2 class="sheet-title">איזה עיצוב בא לך?</h2>
+            <ThemePicker
+              value={profile.themeId}
+              suggested={suggestTheme(profile.ageGroup, profile.gender)}
+              onChange={(id) => {
+                const p = { ...profile, themeId: id };
+                void applyTheme(id);
+                void saveProfile(p).then(() => props.onProfile(p));
+              }}
+            />
+            <button class="btn btn-primary" onClick={() => setThemes(false)}>
+              סיימתי
+            </button>
+          </section>
+        </div>
+      )}
 
       <h2 class="section-title">בקרוב</h2>
       <ul class="soon">

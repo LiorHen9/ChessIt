@@ -11,7 +11,11 @@ export interface Profile {
   ageGroup: AgeGroup;
   /** Used only to suggest a theme (phase 5). Optional. */
   gender?: Gender;
+  /** A theme id from themes/index.ts ('clean', 'space', 'forest'). Unknown ids show 'clean'. */
   themeId: string;
+  /** Optional PIN (profiles/pin.ts): SHA-256 of salt + digits, never the digits. */
+  pinHash?: string;
+  pinSalt?: string;
   createdAt: number;
 }
 

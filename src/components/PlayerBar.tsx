@@ -1,5 +1,6 @@
 import type { Color, PieceSymbol } from 'chess.js';
-import { COLOR_NAME, PIECE_GLYPH } from '../chess/rules';
+import { COLOR_NAME } from '../chess/rules';
+import { PieceIcon } from './Piece';
 import type { Profile } from '../profiles/profiles';
 
 interface Props {
@@ -28,9 +29,7 @@ export function PlayerBar({ profile, color, captured, advantage, active, badge =
         </span>
         <span class="captured" dir="ltr" aria-label={`כלים שנאכלו: ${captured.length}`}>
           {captured.map((p, i) => (
-            <span key={i} class={`cap piece-${opponent}`}>
-              {PIECE_GLYPH[p] + '︎'}
-            </span>
+            <PieceIcon key={i} color={opponent} type={p} class="cap" />
           ))}
           {advantage > 0 && <span class="advantage">+{advantage}</span>}
         </span>

@@ -1,11 +1,14 @@
 // Pieces shared by the drill station screen and the real-position station screen:
 // the top bar, the lesson demo player and the board adapter for drill pieces.
 import type { ComponentChildren } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Board, type BoardPosition } from './Board';
 import { Confetti } from './Confetti';
 import { RichText } from './RichText';
 import { StarRow } from './StarRow';
+import { SpeakButton } from './Speak';
+import { playSound } from '../audio/sound';
+import { autoSpeak } from '../audio/speech';
 import { demoFrames } from '../learning/demo';
 import { movesFrom, type Pieces } from '../learning/drill';
 import type { Station } from '../learning/types';
@@ -54,6 +57,7 @@ export function LessonDemo({ station }: { station: Station }) {
         key={run}
         position={drillPosition(f.pieces, null)}
         orientation="w"
+        quiet
         interactive={false}
         showHints={false}
         lastMove={f.move ? { ...f.move, animate: true, id: i + 1 } : null}
@@ -99,9 +103,19 @@ export interface DoneProps {
 
 /** The end-of-station card: stars, a short line, and what to do next. */
 export function DoneDialog({ stars, line, tip, extra, next, onAgain, onExit, exitLabel = '🗺️ למפה' }: DoneProps) {
+  const card = useRef<HTMLElement>(null);
+  // The title and the line, as the voice should read them (the line may hold markup).
+  const spoken = () => {
+    const el = card.current;
+    return el ? `${el.querySelector('.done-title')?.textContent ?? ''} ${el.querySelector('.done-line')?.textContent ?? ''}` : '';
+  };
+  useEffect(() => {
+    playSound('done');
+    autoSpeak(spoken());
+  }, []);
   return (
     <div class="done-backdrop">
-      <section class="card done" role="dialog" aria-label="סיום התחנה">
+      <section class="card done" role="dialog" aria-label="סיום התחנה" ref={card}>
         <Confetti />
         <div class="done-emoji" aria-hidden="true">
           {stars === 3 ? '🏆' : '🎉'}
@@ -109,6 +123,7 @@ export function DoneDialog({ stars, line, tip, extra, next, onAgain, onExit, exi
         <StarRow stars={stars} animate size="lg" />
         <h2 class="done-title">{stars === 3 ? 'מושלם!' : 'כל הכבוד!'}</h2>
         <p class="done-line">{line}</p>
+        <SpeakButton text={spoken} class="done-speak" />
         {tip && <p class="done-tip">{tip}</p>}
         {extra}
         <div class="done-actions">

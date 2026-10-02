@@ -1,7 +1,8 @@
 import type { Color } from 'chess.js';
 import { Chess } from 'chess.js';
 import { Board } from './Board';
-import { chessPosition, PIECE_GLYPH, PIECE_NAME } from '../chess/rules';
+import { chessPosition, PIECE_NAME } from '../chess/rules';
+import { PieceIcon } from './Piece';
 import { HANDICAP_OPTIONS, type HandicapPiece } from '../chess/handicap';
 
 export interface Handicap {
@@ -66,9 +67,7 @@ export function HandicapPicker({ value, onChange, meLabel, themLabel, previewFen
                     data-piece={o.id}
                     onClick={() => toggle(o.id)}
                   >
-                    <span class="piece-chip-glyph" aria-hidden="true">
-                      {PIECE_GLYPH[o.type] + '︎'}
-                    </span>
+                    <PieceIcon color="w" type={o.type} class="piece-chip-glyph" />
                     <span>{PIECE_NAME[o.type]}</span>
                   </button>
                 );
@@ -77,7 +76,7 @@ export function HandicapPicker({ value, onChange, meLabel, themLabel, previewFen
           </fieldset>
 
           <div class="mini-board" aria-label="עמדת הפתיחה">
-            <Board
+            <Board quiet
               position={chessPosition(new Chess(previewFen))}
               orientation={orientation}
               interactive={false}

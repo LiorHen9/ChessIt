@@ -144,8 +144,9 @@ const FILES = 'abcdefgh';
   await p.click('.promo-btn:has-text("פרש")');
   await p.waitForTimeout(260);
   orient = 'b';
-  const a8 = await p.$$eval('.piece text', els => els.map(e => e.textContent));
-  if (!a8.some(t => t.startsWith('♞'))) throw new Error('no knight after promotion');
+  // Pieces are SVG (<use href="#pc-wN">) since phase 5; data-piece names each one.
+  const a8 = await p.$$eval('.piece', els => els.map(e => e.dataset.piece));
+  if (!a8.includes('wN')) throw new Error('no knight after promotion');
   step('promotion picker works (chose a knight)');
   await shot('11-after-promotion');
 

@@ -14,7 +14,7 @@ import {
 } from '../learning/progress';
 import { say } from '../learning/text';
 import type { World } from '../learning/types';
-import { PIECE_GLYPH } from '../chess/rules';
+import { PieceIcon } from '../components/Piece';
 import { byGender, type Profile, type Progress } from '../profiles/profiles';
 
 interface Props {
@@ -183,7 +183,8 @@ function WorldPath({ world, open, profile, progress, here, hereRef, onOpen, onPu
     return <path key={i} d={d} class={finished ? 'path-done' : 'path-todo'} vector-effect="non-scaling-stroke" />;
   });
 
-  const glyph = world.character ? PIECE_GLYPH[world.character.piece] + '︎' : world.icon;
+  // The banner tile is white, so the character is a black piece (as the old text glyph was).
+  const glyph = world.character ? <PieceIcon color="b" type={world.character.piece} /> : world.icon;
   return (
     <section class={`world ${open ? '' : 'is-locked'}`} style={`--w:var(--world-${world.id})`} aria-label={`עולם ${world.title}`}>
       <div class="world-banner">

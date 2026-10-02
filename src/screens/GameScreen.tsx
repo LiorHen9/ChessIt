@@ -3,6 +3,7 @@ import { Chess, type Color, type PieceSymbol, type Square } from 'chess.js';
 import { Board, type LastMove } from '../components/Board';
 import { PlayerBar } from '../components/PlayerBar';
 import { Confetti } from '../components/Confetti';
+import { playSound } from '../audio/sound';
 import {
   capturedBy,
   checkedKingSquare,
@@ -207,6 +208,8 @@ export function GameScreen({ config, onExit, onRematch, onSummary, onProgress }:
 
   function finish(result: Outcome) {
     void clearSavedGame();
+    // A fanfare for a win at the board (not for the computer winning). After the move's own sound.
+    if (result.winner !== null && (!comp || result.winner === human)) window.setTimeout(() => playSound('win'), 350);
     if (comp && me) {
       const r: GameResult = result.winner === null ? 'draw' : result.winner === human ? 'win' : 'loss';
       void recordComputerResult(me.id, level, r).then(({ progress, offer }) => {
