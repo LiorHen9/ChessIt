@@ -1,0 +1,23 @@
+{
+  "name": "chess-together",
+  "private": true,
+  "version": "0.1.0",
+  "description": "אפליקציית רשת לטלפון ללימוד שחמט, לילדים ולמבוגרים",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "preact": "^10.27.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vite-plugin-pwa": "^1.0.3"
+  }
+}

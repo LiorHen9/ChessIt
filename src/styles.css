@@ -1,0 +1,149 @@
+:root {
+  --bg: #fbf6ec;
+  --surface: #ffffff;
+  --ink: #1f2a22;
+  --ink-soft: #5b675e;
+  --brand: #2f4f3a;
+  --accent: #e0a526;
+  --sq-light: #f0dcb4;
+  --sq-dark: #b5875a;
+  --ok: #2e8b57;
+  --warn: #c9711e;
+  --idle: #8a948c;
+  --radius: 18px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151a16;
+    --surface: #1f2621;
+    --ink: #eef2ec;
+    --ink-soft: #a9b4ab;
+    --brand: #9bc8a7;
+    --sq-light: #c9b48e;
+    --sq-dark: #7d5d3e;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Rubik', 'Segoe UI', Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home {
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hero h1 {
+  margin: 4px 0 8px;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--brand);
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.lead {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.board-wrap {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 8px 24px rgba(31, 42, 34, 0.08);
+}
+
+.board {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.sq-light {
+  fill: var(--sq-light);
+}
+
+.sq-dark {
+  fill: var(--sq-dark);
+}
+
+.piece {
+  font-size: 32px;
+  fill: #1b1b1b;
+  user-select: none;
+}
+
+.status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.status li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 1rem;
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--idle);
+}
+
+.status .ok .dot {
+  background: var(--ok);
+}
+
+.status .warn .dot {
+  background: var(--warn);
+}
+
+.foot {
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
