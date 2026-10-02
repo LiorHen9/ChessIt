@@ -21,6 +21,8 @@ import { ProfileEditor } from '../screens/ProfileEditor';
 import { Home } from '../screens/Home';
 import { GameSetup } from '../screens/GameSetup';
 import { GameScreen, type GameConfig } from '../screens/GameScreen';
+import { LearningMap } from '../screens/LearningMap';
+import { StationScreen } from '../screens/StationScreen';
 
 type Screen =
   | { name: 'loading' }
@@ -28,7 +30,9 @@ type Screen =
   | { name: 'edit'; profile?: Profile }
   | { name: 'home' }
   | { name: 'setup' }
-  | { name: 'game'; config: GameConfig };
+  | { name: 'game'; config: GameConfig }
+  | { name: 'map' }
+  | { name: 'station'; id: string };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'loading' });
@@ -61,7 +65,7 @@ export function App() {
   // Each screen starts at the top.
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [screen.name]);
+  }, [screen.name, screen.name === 'station' ? screen.id : '']);
 
   async function enterHome(p: Profile) {
     setActive(p);
@@ -145,6 +149,7 @@ export function App() {
           onSwitchProfile={() => setScreen({ name: 'profiles' })}
           onNewGame={() => setScreen({ name: 'setup' })}
           onResume={resume}
+          onLearn={() => setScreen({ name: 'map' })}
         />
       );
 
@@ -158,6 +163,28 @@ export function App() {
             void clearSavedGame();
             setScreen({ name: 'game', config: { white, black, options, moves: [], startedAt: Date.now() } });
           }}
+        />
+      );
+
+    case 'map':
+      return (
+        <LearningMap
+          profile={active!}
+          progress={progress}
+          onBack={() => setScreen({ name: 'home' })}
+          onOpen={(id) => setScreen({ name: 'station', id })}
+        />
+      );
+
+    case 'station':
+      return (
+        <StationScreen
+          profile={active!}
+          stationId={screen.id}
+          progress={progress}
+          onExit={() => setScreen({ name: 'map' })}
+          onOpen={(id) => setScreen({ name: 'station', id })}
+          onProgress={setProgress}
         />
       );
 

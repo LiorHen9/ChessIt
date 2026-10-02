@@ -30,6 +30,9 @@
 - `src/profiles/profiles.ts` – פרופילים, התקדמות, סטטיסטיקה, `byGender`.
 - `src/storage/db.ts` – עטיפה ל-IndexedDB. כל שינוי במאגרים מחייב העלאת `SCHEMA_VERSION` והגירה.
 - `src/game/savedGame.ts` – משחק פתוח ופרופיל אחרון ב-`meta`.
+- `src/content/worlds/*.json` – תוכן המסלול (עולמות ותחנות). `src/content/index.ts` טוען ובודק. בדיקה מהטרמינל: `bun tests/content/check.ts`.
+- `src/learning/` – תנועת כלים בתרגולים (`drill.ts`, בלי chess.js), בודק מטרות ופותר (`goals.ts`), כוכבים ופתיחת תחנות (`progress.ts`), טקסט לפי גיל ומין (`text.ts`).
+- טקסט תוכן מוצג דרך `RichText` (שומר על e4 ומספרים משמאל לימין, ומוסיף `︎` לסמלי כלים).
 
 ## מוסכמות
 
@@ -46,6 +49,6 @@
 - **אם npm חסום בסביבת העבודה** (כך היה בסשנים הקודמים): לשכפל את preact (תגית 10.x האחרונה) ואת chess.js מ-GitHub לתיקיית scratchpad, למפות אותם ב-`paths` של tsconfig זמני, ולהריץ:
   - בדיקת טיפוסים: `tsc -p <tsconfig זמני>` (שגיאת ה-import של `styles.css` צפויה מקומית ואפשר להתעלם ממנה).
   - בנייה: `bun build src/main.tsx` עם אותם `paths`. ל-chess.js צריך קובץ דמה `src/pgn.ts`, כי מנתח ה-PGN נוצר בזמן בנייה.
-  - בדיקה בדפדפן: Playwright (מותקן גלובלית) מול `python3 -m http.server`. ראו `tests/e2e/phase1.cjs`.
+  - בדיקה בדפדפן: Playwright (מותקן גלובלית) מול `python3 -m http.server`. ראו `tests/e2e/phase1.cjs` ו-`tests/e2e/phase2.cjs` (צריך להריץ את כולן בכל שלב).
   - חבילות מ-GitHub משמשות רק לבדיקה מקומית ולא נכנסות למאגר.
 - גופני Google חסומים בסביבת הבדיקה, ולכן מקומית מוצג גופן חלופי.

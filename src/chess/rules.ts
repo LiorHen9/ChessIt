@@ -1,4 +1,5 @@
 import type { Chess, Color, Move, PieceSymbol, Square } from 'chess.js';
+import type { BoardPosition } from '../components/Board';
 
 /** One glyph per piece type; colour comes from fill + outline, so both sides share the solid set. */
 export const PIECE_GLYPH: Record<PieceSymbol, string> = {
@@ -76,4 +77,14 @@ export function checkedKingSquare(chess: Chess): Square | null {
   if (!chess.inCheck()) return null;
   const [sq] = chess.findPiece({ type: 'k', color: chess.turn() });
   return sq ?? null;
+}
+
+/** Let the Board show a chess.js game: only the side to move can be picked up. */
+export function chessPosition(chess: Chess): BoardPosition {
+  return {
+    get: (sq) => chess.get(sq),
+    canPick: (sq) => chess.get(sq)?.color === chess.turn(),
+    movesFrom: (sq) =>
+      chess.moves({ square: sq, verbose: true }).map((m) => ({ to: m.to, captured: !!m.captured, promotion: !!m.promotion }))
+  };
 }

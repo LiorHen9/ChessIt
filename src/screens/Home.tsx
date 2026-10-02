@@ -1,4 +1,6 @@
 import type { Profile, Progress } from '../profiles/profiles';
+import { WORLDS } from '../content/index';
+import { totals } from '../learning/progress';
 
 interface Props {
   profile: Profile;
@@ -7,16 +9,18 @@ interface Props {
   onSwitchProfile: () => void;
   onNewGame: () => void;
   onResume: () => void;
+  onLearn: () => void;
 }
 
 const SOON = [
-  { icon: '🗺️', title: 'מסלול הלימוד', text: 'לומדים את הכלים, צעד אחר צעד' },
   { icon: '🤖', title: 'נגד המחשב', text: 'יריב שמתאים את עצמו אליך' },
   { icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }
 ];
 
-export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume }: Props) {
+export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume, onLearn }: Props) {
   const stats = progress?.stats;
+  const path = totals(WORLDS, progress);
+  const pct = path.count ? Math.round((path.done / path.count) * 100) : 0;
   return (
     <main class="screen">
       <header class="home-head">
@@ -48,6 +52,28 @@ export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGa
           </span>
         </button>
       )}
+
+      <button class="action action-learn" onClick={onLearn}>
+        <span class="action-icon" aria-hidden="true">
+          🗺️
+        </span>
+        <span class="action-text">
+          <span class="action-title">מסלול הלימוד</span>
+          <span class="action-sub">
+            {path.done === 0 ? (
+              'לומדים את הלוח ואת הכלים, צעד אחר צעד'
+            ) : (
+              <>
+                <bdi dir="ltr">{path.done}</bdi> מתוך <bdi dir="ltr">{path.count}</bdi> תחנות · ★{' '}
+                <bdi dir="ltr">{path.stars}</bdi>
+              </>
+            )}
+          </span>
+          <span class="learn-bar" aria-hidden="true">
+            <span style={`width:${pct}%`} />
+          </span>
+        </span>
+      </button>
 
       <button class="action action-primary" onClick={onNewGame}>
         <span class="action-icon" aria-hidden="true">

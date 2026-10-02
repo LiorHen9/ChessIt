@@ -5,6 +5,7 @@ import { PlayerBar } from '../components/PlayerBar';
 import {
   capturedBy,
   checkedKingSquare,
+  chessPosition,
   COLOR_NAME,
   END_REASON_TEXT,
   materialBalance,
@@ -164,7 +165,7 @@ export function GameScreen({ config, onExit, onRematch }: Props) {
       />
 
       <Board
-        chess={chess}
+        position={chessPosition(chess)}
         orientation={orientation}
         interactive={!outcome}
         showHints={config.options.hints}

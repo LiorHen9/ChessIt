@@ -50,11 +50,16 @@ export function newProfileId(): string {
   return `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-/** Pick the Hebrew form that matches the profile ("ניצח" / "ניצחה" / "ניצח/ה"). */
-export function byGender(p: Profile, male: string, female: string): string {
+/**
+ * Pick the Hebrew form that matches the profile ("ניצח" / "ניצחה" / "ניצח/ה").
+ * Without a gender, `neutral` is used when given, otherwise a combined form.
+ */
+export function byGender(p: Profile, male: string, female: string, neutral?: string): string {
   if (p.gender === 'boy') return male;
   if (p.gender === 'girl') return female;
-  return `${male}/${female.slice(male.length) || female}`;
+  if (neutral !== undefined) return neutral;
+  if (female.startsWith(male)) return `${male}/${female.slice(male.length)}`;
+  return `${male}/${female}`;
 }
 
 export async function listProfiles(): Promise<Profile[]> {

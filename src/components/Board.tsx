@@ -1,5 +1,5 @@
 import { useRef, useState } from 'preact/hooks';
-import type { Chess, Color, PieceSymbol, Square } from 'chess.js';
+import type { Color, PieceSymbol, Square } from 'chess.js';
 import { PIECE_GLYPH, PIECE_NAME } from '../chess/rules';
 
 const S = 100; // one square in SVG units; the board is 800×800
@@ -14,15 +14,66 @@ export interface LastMove {
   id: number;
 }
 
+export interface BoardPiece {
+  type: PieceSymbol;
+  color: Color;
+}
+
+export interface BoardMove {
+  to: Square;
+  captured?: boolean;
+  promotion?: boolean;
+}
+
+/**
+ * What the board needs to know about a position. The two-player game wraps chess.js
+ * (chessPosition in chess/rules.ts); learning drills use their own simple move rules.
+ */
+export interface BoardPosition {
+  get(sq: Square): BoardPiece | undefined;
+  /** Can the player pick up the piece on this square? */
+  canPick(sq: Square): boolean;
+  movesFrom(sq: Square): BoardMove[];
+}
+
+/** Extra drawings for lessons and minigames. */
+export interface BoardMarks {
+  /** Stars to collect. */
+  stars?: Square[];
+  /** A flag on the target square (reachSquare). */
+  flag?: Square;
+  /** Rings around pieces to capture. */
+  rings?: Square[];
+  highlight?: Square[];
+  highlightAlt?: Square[];
+  /** A soft outlined zone, e.g. the row a task is about. */
+  area?: Square[];
+  good?: Square[];
+  bad?: Square[];
+  /** Pulsing rings for a hint. */
+  hint?: Square[];
+  arrows?: [Square, Square][];
+  dots?: Square[];
+  /** Write the square name on these squares. */
+  labels?: Square[];
+  /** A short burst of sparkles (a star was collected). `id` replays it. */
+  burst?: { sq: Square; id: number };
+}
+
 interface BoardProps {
-  chess: Chess;
+  position: BoardPosition;
   orientation: Color;
-  /** Only the side to move can be picked up; false freezes the board (game over, not your turn). */
+  /** False freezes the board (game over, demo playing). */
   interactive: boolean;
   showHints: boolean;
   lastMove: LastMove | null;
-  checkSquare: Square | null;
+  checkSquare?: Square | null;
   onMove: (from: Square, to: Square, promotion?: PieceSymbol, dragged?: boolean) => void;
+  marks?: BoardMarks;
+  /** Tap mode: every tap reports a square, and pieces cannot be moved. */
+  onSquareTap?: (sq: Square) => void;
+  /** The player tried to move the selected piece somewhere it cannot go. */
+  onIllegal?: (from: Square, to: Square) => void;
 }
 
 interface Drag {
@@ -54,14 +105,35 @@ function squareAt(x: number, y: number, orientation: Color): Square | null {
 const ALL_SQUARES: Square[] = [];
 for (let r = 8; r >= 1; r--) for (let f = 0; f < 8; f++) ALL_SQUARES.push(`${FILES[f]}${r}` as Square);
 
-export function Board({ chess, orientation, interactive, showHints, lastMove, checkSquare, onMove }: BoardProps) {
+/** Five-pointed star path centred on (0,0). */
+const STAR_PATH = (() => {
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const rad = i % 2 === 0 ? 34 : 15;
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    pts.push(`${(Math.cos(a) * rad).toFixed(1)},${(Math.sin(a) * rad).toFixed(1)}`);
+  }
+  return `M${pts.join('L')}Z`;
+})();
+
+export function Board({
+  position,
+  orientation,
+  interactive,
+  showHints,
+  lastMove,
+  checkSquare = null,
+  onMove,
+  marks = {},
+  onSquareTap,
+  onIllegal
+}: BoardProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
-  const [promotion, setPromotion] = useState<{ from: Square; to: Square; dragged: boolean } | null>(null);
+  const [promotion, setPromotion] = useState<{ from: Square; to: Square; dragged: boolean; color: Color } | null>(null);
 
-  const turn = chess.turn();
-  const legal = selected ? chess.moves({ square: selected, verbose: true }) : [];
+  const legal = selected ? position.movesFrom(selected) : [];
   const targets = new Map(legal.map((m) => [m.to, !!m.captured]));
 
   function toSvg(e: PointerEvent): { x: number; y: number } {
@@ -70,20 +142,18 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
   }
 
   function tryMove(from: Square, to: Square, dragged: boolean): boolean {
-    const options = chess.moves({ square: from, verbose: true }).filter((m) => m.to === to);
-    if (options.length === 0) return false;
+    const options = position.movesFrom(from).filter((m) => m.to === to);
+    if (options.length === 0) {
+      onIllegal?.(from, to);
+      return false;
+    }
     if (options.some((m) => m.promotion)) {
-      setPromotion({ from, to, dragged });
+      setPromotion({ from, to, dragged, color: position.get(from)?.color ?? 'w' });
     } else {
       onMove(from, to, undefined, dragged);
     }
     setSelected(null);
     return true;
-  }
-
-  function ownPiece(sq: Square): boolean {
-    const p = chess.get(sq);
-    return !!p && p.color === turn;
   }
 
   function onPointerDown(e: PointerEvent) {
@@ -92,15 +162,20 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
     const sq = squareAt(x, y, orientation);
     if (!sq) return;
 
+    if (onSquareTap) {
+      onSquareTap(sq);
+      return;
+    }
     if (selected && targets.has(sq)) {
       tryMove(selected, sq, false);
       return;
     }
-    if (ownPiece(sq)) {
+    if (position.canPick(sq)) {
       svgRef.current!.setPointerCapture(e.pointerId);
       setDrag({ pointerId: e.pointerId, from: sq, x, y, startX: x, startY: y, moved: false, wasSelected: selected === sq });
       setSelected(sq);
     } else {
+      if (selected) onIllegal?.(selected, sq);
       setSelected(null);
     }
   }
@@ -135,12 +210,7 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
     setPromotion(null);
   }
 
-  const board = chess.board();
-  const pieceAt = (sq: Square) => {
-    const f = FILES.indexOf(sq[0]);
-    const r = Number(sq[1]);
-    return board[8 - r][f];
-  };
+  const has = (list: Square[] | undefined, sq: Square) => !!list && list.includes(sq);
 
   // Squares, highlights and coordinates.
   const squares = ALL_SQUARES.map((sq) => {
@@ -149,11 +219,17 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
     const r = Number(sq[1]);
     const light = (f + r) % 2 === 0;
     const isLast = lastMove && (lastMove.from === sq || lastMove.to === sq);
+    const overlay = (cls: string) => <rect x={x} y={y} width={S} height={S} class={cls} />;
     return (
       <g key={sq}>
         <rect x={x} y={y} width={S} height={S} class={light ? 'sq-light' : 'sq-dark'} />
-        {isLast && <rect x={x} y={y} width={S} height={S} class="sq-last" />}
-        {selected === sq && <rect x={x} y={y} width={S} height={S} class="sq-selected" />}
+        {has(marks.area, sq) && overlay('sq-area')}
+        {has(marks.highlight, sq) && overlay('sq-hl')}
+        {has(marks.highlightAlt, sq) && overlay('sq-hl-alt')}
+        {isLast && overlay('sq-last')}
+        {has(marks.good, sq) && overlay('sq-good')}
+        {has(marks.bad, sq) && overlay('sq-bad')}
+        {selected === sq && overlay('sq-selected')}
         {checkSquare === sq && <circle cx={x + S / 2} cy={y + S / 2} r={S * 0.48} class="sq-check" />}
       </g>
     );
@@ -176,19 +252,93 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
     );
   }
 
+  const center = (sq: Square) => {
+    const { x, y } = squareXY(sq, orientation);
+    return { cx: x + S / 2, cy: y + S / 2 };
+  };
+
+  const stars = (marks.stars ?? []).map((sq) => {
+    const { cx, cy } = center(sq);
+    return (
+      <g key={`star-${sq}`} class="mark-star" transform={`translate(${cx} ${cy})`}>
+        <path d={STAR_PATH} />
+      </g>
+    );
+  });
+
+  let flag = null;
+  if (marks.flag) {
+    const { cx, cy } = center(marks.flag);
+    flag = (
+      <g class="mark-flag" transform={`translate(${cx} ${cy})`}>
+        <line x1={-14} y1={-34} x2={-14} y2={34} />
+        <path d="M-12,-34 L30,-20 L-12,-6 Z" />
+      </g>
+    );
+  }
+
+  const rings = (marks.rings ?? []).map((sq) => {
+    const { cx, cy } = center(sq);
+    return <circle key={`ring-${sq}`} cx={cx} cy={cy} r={S * 0.45} class="mark-ring" />;
+  });
+
+  const hintRings = (marks.hint ?? []).map((sq) => {
+    const { cx, cy } = center(sq);
+    return <circle key={`hint-${sq}`} cx={cx} cy={cy} r={S * 0.42} class="mark-hint" />;
+  });
+
+  const dots = (marks.dots ?? []).map((sq) => {
+    const { cx, cy } = center(sq);
+    return <circle key={`dot-${sq}`} cx={cx} cy={cy} r={S * 0.17} class="mark-dot" />;
+  });
+
+  const arrows = (marks.arrows ?? []).map(([from, to]) => {
+    const a = center(from);
+    const b = center(to);
+    const len = Math.hypot(b.cx - a.cx, b.cy - a.cy) || 1;
+    // Stop short of the target centre so the head sits inside the square.
+    const ex = b.cx - ((b.cx - a.cx) / len) * 22;
+    const ey = b.cy - ((b.cy - a.cy) / len) * 22;
+    return <line key={`arrow-${from}${to}`} x1={a.cx} y1={a.cy} x2={ex} y2={ey} class="mark-arrow" marker-end="url(#arrowhead)" />;
+  });
+
+  const labels = (marks.labels ?? []).map((sq) => {
+    const { cx, cy } = center(sq);
+    return (
+      <g key={`label-${sq}`} class="mark-label">
+        <rect x={cx - 38} y={cy - 24} width={76} height={48} rx={14} />
+        <text x={cx} y={cy + 1} text-anchor="middle" dominant-baseline="central">
+          {sq}
+        </text>
+      </g>
+    );
+  });
+
+  let burst = null;
+  if (marks.burst) {
+    const { cx, cy } = center(marks.burst.sq);
+    burst = (
+      <g key={`burst-${marks.burst.id}`} class="mark-burst" transform={`translate(${cx} ${cy})`}>
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <circle key={i} r={7} style={`--a:${i * 45}deg`} />
+        ))}
+      </g>
+    );
+  }
+
   const hints = showHints
     ? [...targets.entries()].map(([sq, capture]) => {
-        const { x, y } = squareXY(sq, orientation);
+        const { cx, cy } = center(sq);
         return capture ? (
-          <circle key={`h${sq}`} cx={x + S / 2} cy={y + S / 2} r={S * 0.44} class="hint-capture" />
+          <circle key={`h${sq}`} cx={cx} cy={cy} r={S * 0.44} class="hint-capture" />
         ) : (
-          <circle key={`h${sq}`} cx={x + S / 2} cy={y + S / 2} r={S * 0.15} class="hint-move" />
+          <circle key={`h${sq}`} cx={cx} cy={cy} r={S * 0.15} class="hint-move" />
         );
       })
     : [];
 
   const pieces = ALL_SQUARES.flatMap((sq) => {
-    const p = pieceAt(sq);
+    const p = position.get(sq);
     if (!p) return [];
     if (drag?.moved && drag.from === sq) return []; // drawn under the finger instead
     const { x, y } = squareXY(sq, orientation);
@@ -210,7 +360,7 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
 
   let dragged = null;
   if (drag?.moved) {
-    const p = chess.get(drag.from);
+    const p = position.get(drag.from);
     if (p) {
       dragged = (
         <g class={`piece piece-${p.color} piece-dragging`}>
@@ -235,10 +385,23 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       >
+        <defs>
+          <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 Z" class="mark-arrowhead" />
+          </marker>
+        </defs>
         {squares}
         {coords}
+        {stars}
+        {flag}
+        {rings}
         {pieces}
         {hints}
+        {dots}
+        {hintRings}
+        {arrows}
+        {labels}
+        {burst}
         {dragged}
       </svg>
 
@@ -248,7 +411,7 @@ export function Board({ chess, orientation, interactive, showHints, lastMove, ch
           <div class="promo-options">
             {(['q', 'r', 'b', 'n'] as PieceSymbol[]).map((t) => (
               <button key={t} class="promo-btn" onClick={() => choosePromotion(t)}>
-                <span class={`promo-glyph piece-${turn}`}>{PIECE_GLYPH[t] + '︎'}</span>
+                <span class={`promo-glyph piece-${promotion.color}`}>{PIECE_GLYPH[t] + '︎'}</span>
                 <span>{PIECE_NAME[t]}</span>
               </button>
             ))}

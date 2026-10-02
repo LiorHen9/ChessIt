@@ -15,6 +15,15 @@
   --sq-last: rgba(240, 200, 60, 0.45);
   --sq-selected: rgba(70, 150, 90, 0.5);
   --hint: rgba(31, 42, 34, 0.28);
+  --gold: #f2b705;
+  --good: #2f9e44;
+  --world-board: #2a9d8f;
+  --world-rook: #e76f51;
+  --world-bishop: #8e5bd8;
+  --world-queen: #d6336c;
+  --world-king: #c98a0b;
+  --world-knight: #3a7bd5;
+  --world-pawn: #2f9e44;
   --radius: 18px;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 8px 24px rgba(31, 42, 34, 0.08);
   color-scheme: light dark;
@@ -899,6 +908,758 @@ fieldset {
 
 .loading {
   background: var(--bg);
+}
+
+/* ---------- Home: learning path ---------- */
+
+.action-learn {
+  background: var(--world-board);
+  color: #fff;
+}
+
+.action-learn .action-sub {
+  color: inherit;
+  opacity: 0.9;
+}
+
+.action-learn .action-icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.action-learn .action-text {
+  flex: 1;
+}
+
+.learn-bar {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.learn-bar > span {
+  display: block;
+  height: 100%;
+  min-width: 6px;
+  border-radius: inherit;
+  background: var(--gold);
+}
+
+/* ---------- Stars ---------- */
+
+.star-row {
+  display: inline-flex;
+  gap: 2px;
+  line-height: 1;
+  direction: ltr;
+}
+
+.star-row-sm {
+  font-size: 0.95rem;
+}
+
+.star-row-md {
+  font-size: 1.4rem;
+}
+
+.star-row-lg {
+  font-size: 3rem;
+  gap: 8px;
+}
+
+.star-on {
+  color: var(--gold);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.star-off {
+  color: var(--line);
+}
+
+.star-row.is-animated > span {
+  animation: star-pop 420ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation-delay: calc(var(--i) * 260ms + 150ms);
+}
+
+@keyframes star-pop {
+  from {
+    transform: scale(0) rotate(-40deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Learning map ---------- */
+
+.map {
+  gap: 12px;
+}
+
+.map-total {
+  justify-self: end;
+  font-weight: 800;
+  color: var(--gold);
+  font-size: 1.1rem;
+  padding-inline: 8px;
+}
+
+.map-part {
+  margin: 10px 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--brand);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.map-part-num {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.world {
+  position: relative;
+}
+
+.world-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--w);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
+.world-glyph {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1d1d1d;
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'DejaVu Sans', sans-serif;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.world-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.world-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.world-char {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.world-count {
+  font-weight: 800;
+  font-size: 1.1rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.world-hello {
+  margin: 10px 4px 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--w);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.world.is-locked .world-banner {
+  filter: grayscale(0.85);
+  opacity: 0.6;
+}
+
+.path {
+  position: relative;
+  margin: 4px 0 6px;
+}
+
+.path-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.path-line path {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.path-todo {
+  stroke: var(--line);
+  stroke-dasharray: 2 16;
+}
+
+.path-done {
+  stroke: var(--w);
+  opacity: 0.55;
+}
+
+.node {
+  position: absolute;
+  width: 132px;
+  transform: translate(-50%, -32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.node-btn {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 4px var(--w), 0 4px 0 color-mix(in srgb, var(--w) 70%, #000), var(--shadow);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: transform 80ms ease;
+}
+
+.node-game .node-btn {
+  border-radius: 20px;
+}
+
+.node-btn:active:not(:disabled) {
+  transform: translateY(3px);
+}
+
+.node.is-done .node-btn {
+  background: var(--w);
+}
+
+.node.is-locked .node-btn {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 3px var(--line);
+  font-size: 1.4rem;
+  cursor: default;
+}
+
+.node-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+}
+
+.node.is-locked .node-title {
+  color: var(--ink-soft);
+}
+
+.node.is-here .node-btn {
+  animation: here-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes here-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 4px var(--w), 0 0 0 0 color-mix(in srgb, var(--w) 55%, transparent), var(--shadow);
+  }
+  50% {
+    box-shadow: inset 0 0 0 4px var(--w), 0 0 0 12px color-mix(in srgb, var(--w) 0%, transparent), var(--shadow);
+  }
+}
+
+.here-tag {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.here-tag::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+}
+
+.node.is-here {
+  /* leave room for the tag above */
+  padding-top: 0;
+}
+
+.map-end {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ---------- Station (lesson / minigame) ---------- */
+
+.station {
+  gap: 10px;
+}
+
+.speech,
+.task {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  box-shadow: inset 0 0 0 2px var(--w), var(--shadow);
+}
+
+.char-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--w);
+  color: #fff;
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'DejaVu Sans', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.speech-body,
+.task-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.speech-hello,
+.speech-text,
+.task-text {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.speech-hello {
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+.speech-hello strong {
+  color: var(--w);
+}
+
+.task-text {
+  font-weight: 600;
+}
+
+.task-target {
+  margin: 0;
+  align-self: flex-start;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 6px 16px;
+  border-radius: 14px;
+  background: var(--w);
+  color: #fff;
+  animation: pop 220ms ease-out;
+}
+
+.sq-name {
+  font-weight: 800;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--w, var(--brand)) 16%, transparent);
+}
+
+.drill-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.chip-progress {
+  background: var(--w);
+  color: #fff;
+  box-shadow: none;
+}
+
+.chip-goal {
+  color: var(--ink-soft);
+}
+
+.chip-goal [aria-hidden] {
+  color: var(--gold);
+}
+
+.feedback {
+  margin: 0;
+  min-height: 1.6em;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+  animation: pop 200ms ease-out;
+}
+
+.feedback-how {
+  color: var(--ink-soft);
+  font-weight: 400;
+}
+
+.feedback.is-good {
+  color: var(--good);
+}
+
+.feedback.is-bad {
+  color: var(--danger);
+}
+
+.feedback.is-info {
+  color: var(--brand);
+}
+
+.drill-actions > .btn {
+  flex: 1;
+}
+
+.demo-again {
+  align-self: center;
+}
+
+.go-btn {
+  width: 100%;
+  animation: pop 260ms ease-out;
+}
+
+/* Demo */
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.demo-caption {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--w);
+  min-height: 1.5em;
+}
+
+.demo-steps {
+  grid-row: 2;
+  display: flex;
+  gap: 5px;
+}
+
+.demo-steps span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.demo-steps span.is-on {
+  background: var(--w);
+}
+
+.demo-replay {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+}
+
+/* Done */
+
+.done-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(20, 26, 22, 0.55);
+  animation: fade 200ms ease-out;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.done {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 18px 18px;
+  text-align: center;
+  overflow: hidden;
+  animation: pop 260ms ease-out;
+}
+
+.done-emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.done-title {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.done-line,
+.done-tip,
+.done-world {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.done-line {
+  font-size: 1.1rem;
+}
+
+.done-tip {
+  color: var(--ink-soft);
+}
+
+.done-world {
+  font-weight: 800;
+  color: var(--w);
+  font-size: 1.1rem;
+}
+
+.done-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.done-actions .row > .btn {
+  flex: 1;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-bit {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fall 1.6s ease-in forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), 420px) rotate(calc(var(--spin) + 360deg));
+  }
+}
+
+/* ---------- Board marks ---------- */
+
+.sq-hl {
+  fill: rgba(242, 183, 5, 0.5);
+}
+
+.sq-hl-alt {
+  fill: rgba(58, 123, 213, 0.42);
+}
+
+.sq-area {
+  fill: rgba(42, 157, 143, 0.28);
+}
+
+.sq-good {
+  fill: rgba(47, 158, 68, 0.6);
+}
+
+.sq-bad {
+  fill: rgba(194, 65, 45, 0.6);
+  animation: blink 0.7s ease-out;
+}
+
+@keyframes blink {
+  from {
+    fill-opacity: 1;
+  }
+  to {
+    fill-opacity: 0.2;
+  }
+}
+
+.mark-star path {
+  fill: var(--gold);
+  stroke: #9a6b00;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+/* Animate the path, not the group: a CSS transform would replace the group's translate(). */
+.mark-star path {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle 1.8s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.mark-flag line {
+  stroke: #333;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.mark-flag path {
+  fill: var(--danger);
+}
+
+.mark-ring {
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 6;
+  stroke-dasharray: 14 9;
+  pointer-events: none;
+}
+
+.mark-hint {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 10;
+  pointer-events: none;
+  animation: hint-pulse 1s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  50% {
+    stroke-opacity: 0.25;
+  }
+}
+
+.mark-dot {
+  fill: rgba(42, 157, 143, 0.75);
+  pointer-events: none;
+}
+
+.mark-arrow {
+  stroke: rgba(214, 51, 108, 0.85);
+  stroke-width: 14;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.mark-arrowhead {
+  fill: rgba(214, 51, 108, 0.85);
+}
+
+.mark-label rect {
+  fill: rgba(31, 42, 34, 0.86);
+}
+
+.mark-label text {
+  fill: #fff;
+  font-size: 34px;
+  font-weight: 800;
+  font-family: 'Rubik', 'Segoe UI', Arial, sans-serif;
+}
+
+.mark-label,
+.mark-star,
+.mark-flag,
+.mark-burst {
+  pointer-events: none;
+}
+
+.mark-burst circle {
+  fill: var(--gold);
+  animation: burst 600ms ease-out forwards;
+}
+
+@keyframes burst {
+  from {
+    transform: rotate(var(--a)) translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(var(--a)) translateY(-46px) scale(0.3);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
