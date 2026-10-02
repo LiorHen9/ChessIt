@@ -1,59 +1,174 @@
 import { useEffect, useState } from 'preact/hooks';
-import { MiniBoard } from '../components/MiniBoard';
+import {
+  deleteProfile,
+  getProgress,
+  GUEST,
+  listProfiles,
+  saveProfile,
+  type Profile,
+  type Progress
+} from '../profiles/profiles';
+import {
+  clearSavedGame,
+  getLastProfileId,
+  loadSavedGame,
+  setLastProfileId,
+  type SavedGame
+} from '../game/savedGame';
+import { requestPersistence } from '../storage/db';
+import { ProfilePicker } from '../screens/ProfilePicker';
+import { ProfileEditor } from '../screens/ProfileEditor';
+import { Home } from '../screens/Home';
+import { GameSetup } from '../screens/GameSetup';
+import { GameScreen, type GameConfig } from '../screens/GameScreen';
 
-function useOnline(): boolean {
-  const [online, setOnline] = useState(navigator.onLine);
-  useEffect(() => {
-    const up = () => setOnline(true);
-    const down = () => setOnline(false);
-    window.addEventListener('online', up);
-    window.addEventListener('offline', down);
-    return () => {
-      window.removeEventListener('online', up);
-      window.removeEventListener('offline', down);
-    };
-  }, []);
-  return online;
-}
-
-function useInstalled(): boolean {
-  const query = '(display-mode: standalone)';
-  const [installed, setInstalled] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const media = window.matchMedia(query);
-    const onChange = () => setInstalled(media.matches);
-    media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
-  }, []);
-  return installed;
-}
+type Screen =
+  | { name: 'loading' }
+  | { name: 'profiles' }
+  | { name: 'edit'; profile?: Profile }
+  | { name: 'home' }
+  | { name: 'setup' }
+  | { name: 'game'; config: GameConfig };
 
 export function App() {
-  const online = useOnline();
-  const installed = useInstalled();
+  const [screen, setScreen] = useState<Screen>({ name: 'loading' });
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [active, setActive] = useState<Profile | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [saved, setSaved] = useState<SavedGame | undefined>(undefined);
 
-  return (
-    <main class="home">
-      <header class="hero">
-        <p class="eyebrow">שלב 0 · התשתית מוכנה</p>
-        <h1>ChessIt</h1>
-        <p class="lead">לומדים שחמט צעד אחר צעד – ילדים, הורים, כל המשפחה.</p>
-      </header>
+  async function refresh(): Promise<Profile[]> {
+    const list = await listProfiles();
+    setProfiles(list);
+    setSaved(await loadSavedGame());
+    return list;
+  }
 
-      <MiniBoard />
+  useEffect(() => {
+    void requestPersistence();
+    void (async () => {
+      const list = await refresh();
+      const lastId = await getLastProfileId();
+      const last = list.find((p) => p.id === lastId);
+      if (last) {
+        await enterHome(last);
+      } else {
+        setScreen(list.length === 0 ? { name: 'edit' } : { name: 'profiles' });
+      }
+    })();
+  }, []);
 
-      <ul class="status" aria-label="מצב האפליקציה">
-        <li class={online ? 'ok' : 'warn'}>
-          <span class="dot" aria-hidden="true" />
-          {online ? 'מחובר לאינטרנט' : 'אין אינטרנט – והכול עדיין עובד'}
-        </li>
-        <li class={installed ? 'ok' : 'idle'}>
-          <span class="dot" aria-hidden="true" />
-          {installed ? 'מותקן במסך הבית' : 'אפשר להוסיף למסך הבית מתפריט הדפדפן'}
-        </li>
-      </ul>
+  // Each screen starts at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen.name]);
 
-      <footer class="foot">בקרוב: פרופילים, לוח משחק ועולם הכלים</footer>
-    </main>
-  );
+  async function enterHome(p: Profile) {
+    setActive(p);
+    void setLastProfileId(p.id);
+    setProgress(await getProgress(p.id));
+    setSaved(await loadSavedGame());
+    setScreen({ name: 'home' });
+  }
+
+  async function handleSave(p: Profile) {
+    await saveProfile(p);
+    await refresh();
+    await enterHome(p);
+  }
+
+  async function handleDelete(p: Profile) {
+    await deleteProfile(p.id);
+    if (saved && (saved.whiteId === p.id || saved.blackId === p.id)) await clearSavedGame();
+    const list = await refresh();
+    if (active?.id === p.id) setActive(null);
+    setScreen(list.length === 0 ? { name: 'edit' } : { name: 'profiles' });
+  }
+
+  function findPlayer(id: string): Profile | undefined {
+    if (id === GUEST.id) return GUEST;
+    return profiles.find((p) => p.id === id);
+  }
+
+  function resume() {
+    if (!saved) return;
+    const white = findPlayer(saved.whiteId);
+    const black = findPlayer(saved.blackId);
+    if (!white || !black) {
+      void clearSavedGame();
+      setSaved(undefined);
+      return;
+    }
+    setScreen({
+      name: 'game',
+      config: { white, black, options: saved.options, moves: saved.moves, startedAt: saved.startedAt }
+    });
+  }
+
+  async function backHome() {
+    if (active) await enterHome(active);
+    else setScreen({ name: 'profiles' });
+  }
+
+  switch (screen.name) {
+    case 'loading':
+      return <main class="screen loading" aria-busy="true" />;
+
+    case 'profiles':
+      return (
+        <ProfilePicker
+          profiles={profiles}
+          onPick={(p) => void enterHome(p)}
+          onCreate={() => setScreen({ name: 'edit' })}
+          onEdit={(p) => setScreen({ name: 'edit', profile: p })}
+        />
+      );
+
+    case 'edit':
+      return (
+        <ProfileEditor
+          key={screen.profile?.id ?? 'new'}
+          profile={screen.profile}
+          canCancel={profiles.length > 0}
+          onSave={(p) => void handleSave(p)}
+          onDelete={(p) => void handleDelete(p)}
+          onCancel={() => setScreen({ name: 'profiles' })}
+        />
+      );
+
+    case 'home':
+      return (
+        <Home
+          profile={active!}
+          progress={progress}
+          hasSavedGame={!!saved}
+          onSwitchProfile={() => setScreen({ name: 'profiles' })}
+          onNewGame={() => setScreen({ name: 'setup' })}
+          onResume={resume}
+        />
+      );
+
+    case 'setup':
+      return (
+        <GameSetup
+          me={active!}
+          others={profiles.filter((p) => p.id !== active!.id)}
+          onCancel={() => setScreen({ name: 'home' })}
+          onStart={(white, black, options) => {
+            void clearSavedGame();
+            setScreen({ name: 'game', config: { white, black, options, moves: [], startedAt: Date.now() } });
+          }}
+        />
+      );
+
+    case 'game':
+      return (
+        <GameScreen
+          key={screen.config.startedAt}
+          config={screen.config}
+          onExit={() => void backHome()}
+          onRematch={(config) => setScreen({ name: 'game', config })}
+        />
+      );
+  }
 }

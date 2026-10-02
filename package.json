@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "chess.js": "^1.4.0",
     "preact": "^10.27.0"
   },
   "devDependencies": {
