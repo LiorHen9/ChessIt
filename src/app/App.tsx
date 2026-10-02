@@ -19,6 +19,7 @@ import {
   type SavedGame
 } from '../game/savedGame';
 import { requestPersistence } from '../storage/db';
+import { loadContent } from '../content/index';
 import { ProfilePicker } from '../screens/ProfilePicker';
 import { ProfileEditor } from '../screens/ProfileEditor';
 import { Home } from '../screens/Home';
@@ -29,6 +30,12 @@ import { GameSummary } from '../screens/GameSummary';
 import { DEFAULT_POSITION } from '../chess/handicap';
 import { LearningMap } from '../screens/LearningMap';
 import { StationScreen } from '../screens/StationScreen';
+import { offerPlacement } from '../screens/Home';
+import { PuzzleScreen, type PuzzleMode } from '../screens/PuzzleScreen';
+import { PuzzlesHub } from '../screens/PuzzlesHub';
+import { ReviewScreen } from '../screens/ReviewScreen';
+import { PlacementTest } from '../screens/PlacementTest';
+import { themeInfo } from '../content/puzzles/index';
 
 type Screen =
   | { name: 'loading' }
@@ -40,7 +47,11 @@ type Screen =
   | { name: 'game'; config: GameConfig }
   | { name: 'summary'; game: FinishedGame }
   | { name: 'map' }
-  | { name: 'station'; id: string };
+  | { name: 'station'; id: string; fromReview?: boolean }
+  | { name: 'puzzles' }
+  | { name: 'puzzle'; mode: PuzzleMode; back: 'home' | 'puzzles' | 'map' | 'review' }
+  | { name: 'review' }
+  | { name: 'placement'; back: 'home' | 'map' };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'loading' });
@@ -59,6 +70,8 @@ export function App() {
   useEffect(() => {
     void requestPersistence();
     void (async () => {
+      // The learning content is a separate download (lazy chunk); load it before the first screen.
+      await loadContent().catch((e) => console.error('[content] failed to load', e));
       const list = await refresh();
       const lastId = await getLastProfileId();
       const last = list.find((p) => p.id === lastId);
@@ -73,7 +86,7 @@ export function App() {
   // Each screen starts at the top.
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [screen.name, screen.name === 'station' ? screen.id : '']);
+  }, [screen.name, screen.name === 'station' ? screen.id : '', screen.name === 'puzzle' ? JSON.stringify(screen.mode) : '']);
 
   async function enterHome(p: Profile) {
     setActive(p);
@@ -170,6 +183,10 @@ export function App() {
           onResume={resume}
           onLearn={() => setScreen({ name: 'map' })}
           onComputer={() => setScreen({ name: 'computerSetup' })}
+          onDaily={() => setScreen({ name: 'puzzle', mode: { kind: 'daily' }, back: 'home' })}
+          onPuzzles={() => setScreen({ name: 'puzzles' })}
+          onReview={() => setScreen({ name: 'review' })}
+          onPlacement={() => setScreen({ name: 'placement', back: 'home' })}
         />
       );
 
@@ -228,6 +245,16 @@ export function App() {
           progress={progress}
           onBack={() => setScreen({ name: 'home' })}
           onOpen={(id) => setScreen({ name: 'station', id })}
+          onPuzzles={(w) =>
+            w.puzzles &&
+            setScreen({
+              name: 'puzzle',
+              mode: { kind: 'set', theme: w.puzzles.theme, count: w.puzzles.count, title: `חידות: ${themeInfo(w.puzzles.theme)?.title ?? w.title}` },
+              back: 'map'
+            })
+          }
+          onPlacement={() => setScreen({ name: 'placement', back: 'map' })}
+          showPlacement={offerPlacement(active!, progress)}
         />
       );
 
@@ -237,8 +264,61 @@ export function App() {
           profile={active!}
           stationId={screen.id}
           progress={progress}
-          onExit={() => setScreen({ name: 'map' })}
+          fromReview={screen.fromReview}
+          onExit={() => setScreen(screen.fromReview ? { name: 'review' } : { name: 'map' })}
           onOpen={(id) => setScreen({ name: 'station', id })}
+          onProgress={setProgress}
+        />
+      );
+
+    case 'puzzles':
+      return (
+        <PuzzlesHub
+          profile={active!}
+          progress={progress}
+          onBack={() => setScreen({ name: 'home' })}
+          onDaily={() => setScreen({ name: 'puzzle', mode: { kind: 'daily' }, back: 'puzzles' })}
+          onTheme={(theme) => setScreen({ name: 'puzzle', mode: { kind: 'theme', theme }, back: 'puzzles' })}
+        />
+      );
+
+    case 'puzzle': {
+      const back = screen.back;
+      return (
+        <PuzzleScreen
+          key={JSON.stringify(screen.mode)}
+          profile={active!}
+          progress={progress}
+          mode={screen.mode}
+          onExit={() => setScreen({ name: back } as Screen)}
+          exitLabel={back === 'review' ? '🔁 לחזרה' : back === 'map' ? '🗺️ למפה' : undefined}
+          onProgress={setProgress}
+        />
+      );
+    }
+
+    case 'review':
+      return (
+        <ReviewScreen
+          profile={active!}
+          progress={progress}
+          onBack={() => setScreen({ name: 'home' })}
+          onOpen={(item) =>
+            setScreen(
+              item.kind === 'station'
+                ? { name: 'station', id: item.id, fromReview: true }
+                : { name: 'puzzle', mode: { kind: 'one', theme: item.theme, id: item.id }, back: 'review' }
+            )
+          }
+        />
+      );
+
+    case 'placement':
+      return (
+        <PlacementTest
+          profile={active!}
+          onExit={() => setScreen(screen.back === 'map' ? { name: 'map' } : { name: 'home' })}
+          onMap={() => setScreen({ name: 'map' })}
           onProgress={setProgress}
         />
       );

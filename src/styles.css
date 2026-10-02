@@ -24,6 +24,12 @@
   --world-king: #c98a0b;
   --world-knight: #3a7bd5;
   --world-pawn: #2f9e44;
+  --world-capture: #d9480f;
+  --world-check: #c92a2a;
+  --world-mate: #b8860b;
+  --world-special: #7048e8;
+  --world-tactics: #1971c2;
+  --world-opening: #0c8599;
   --radius: 18px;
   --shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 8px 24px rgba(31, 42, 34, 0.08);
   color-scheme: light dark;
@@ -1013,9 +1019,6 @@ fieldset {
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--brand);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
 }
 
 .map-part-num {
@@ -2035,4 +2038,247 @@ fieldset {
 
 .mark-arrowhead-bad {
   fill: rgba(194, 65, 45, 0.85);
+}
+
+/* ---------- Phase 4: collapsible map parts, puzzles, review, placement ---------- */
+
+.map-part-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.map-part-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--brand);
+  font: inherit;
+  font-weight: 800;
+  text-align: start;
+  cursor: pointer;
+}
+
+.map-part-block.is-locked .map-part-btn {
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+.map-part-title {
+  flex: 1;
+}
+
+.map-part-state {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.map-part-chevron {
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.world-passed {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.node-puzzle .node-btn {
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--w) 14%, var(--surface));
+  box-shadow: inset 0 0 0 3px var(--w), 0 4px 0 color-mix(in srgb, var(--w) 70%, #000), var(--shadow);
+}
+
+.map-placement {
+  margin-top: 4px;
+}
+
+.action-placement {
+  box-shadow: inset 0 0 0 2px var(--accent), var(--shadow);
+}
+
+.home-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.home-pair .action {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px;
+}
+
+.home-pair .action-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.35rem;
+}
+
+.home-pair .action-title {
+  font-size: 1rem;
+}
+
+.home-pair .action-sub {
+  font-size: 0.82rem;
+}
+
+.action-daily {
+  box-shadow: inset 0 0 0 2px var(--gold), var(--shadow);
+}
+
+.action-daily.is-done {
+  box-shadow: inset 0 0 0 2px var(--good), var(--shadow);
+}
+
+.action-review {
+  background: var(--world-special);
+  color: #fff;
+}
+
+.action-review .action-sub {
+  color: inherit;
+  opacity: 0.9;
+}
+
+.action-review .action-icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.theme-list,
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.theme-card.is-locked {
+  opacity: 0.6;
+  box-shadow: none;
+  background: var(--surface-2);
+  cursor: default;
+}
+
+.credit,
+.puzzle-credit {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  text-align: center;
+  margin: 0;
+}
+
+.puzzle-meta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.review-intro p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.real-task {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.round-next {
+  text-align: center;
+  min-height: 3em;
+}
+
+.placement-intro,
+.placement-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.placement-intro h2,
+.placement-result h2 {
+  margin: 0;
+}
+
+.placement-intro p,
+.placement-result p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.placement-parts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.placement-parts li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.placement-level {
+  font-size: 1rem;
+}
+
+.placement-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.placement-progress span {
+  width: 26px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.placement-progress span.is-on {
+  background: var(--good);
+}
+
+.placement-progress span.is-now {
+  background: var(--accent);
+}
+
+.placement-answer {
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Three actions (hint, undo, restart) fit one row on a phone. */
+.real-task .drill-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.real-task .drill-actions > .btn {
+  white-space: nowrap;
+  padding-inline: 8px;
+  min-width: 0;
 }

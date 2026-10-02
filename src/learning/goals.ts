@@ -70,6 +70,8 @@ export function isDone(goal: Goal, state: DrillState, targets: Square[]): boolea
       return state.promoted;
     case 'tapSquares':
       return false; // handled by the screen, not by moves
+    default:
+      return false; // real-position goals run on learning/real.ts
   }
 }
 

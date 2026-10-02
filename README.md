@@ -30,3 +30,5 @@ npm run preview   # הצגת הגרסה הבנויה
 
 GPL-3.0-or-later. ראו [LICENSE](LICENSE).
 הרישיון נבחר כדי לאפשר שימוש במנוע Stockfish, שמופץ גם הוא ב-GPL-3.
+
+החידות לקוחות ממאגר החידות הפתוח של [Lichess](https://database.lichess.org/#puzzles) (‏CC0). כדי לבנות אותן מחדש מהמאגר המלא: `bun scripts/puzzles.ts lichess_db_puzzle.csv` (ההוראות בראש הסקריפט).

@@ -1,28 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { PieceSymbol, Square } from 'chess.js';
-import { Board, type BoardMarks, type BoardPosition, type LastMove } from '../components/Board';
-import { Confetti } from '../components/Confetti';
+import { Board, type BoardMarks, type LastMove } from '../components/Board';
 import { RichText } from '../components/RichText';
-import { StarRow } from '../components/StarRow';
+import { DoneDialog, drillPosition, LessonDemo, mistakesLine, TopBar } from '../components/StationParts';
 import { PIECE_GLYPH } from '../chess/rules';
 import { findStation, WORLDS } from '../content/index';
-import { demoFrames } from '../learning/demo';
-import { movesFrom, sq as makeSquare, type DMove, type Pieces } from '../learning/drill';
+import { sq as makeSquare, type DMove } from '../learning/drill';
 import { illegalReason } from '../learning/feedback';
 import { captureTargets, isDone, isLegal, solve, startState, step, type DrillState } from '../learning/goals';
 import { isUnlocked, nextStationId, recordStation, starsFor, type Stars } from '../learning/progress';
 import { gendered, say } from '../learning/text';
-import type { Station, World } from '../learning/types';
+import { isRealGoal, type Station, type World } from '../learning/types';
 import type { Profile, Progress } from '../profiles/profiles';
+import { RealStation } from './RealStation';
 
-interface Props {
+export interface StationProps {
   profile: Profile;
   stationId: string;
   progress: Progress | null;
   onExit: () => void;
   onOpen: (stationId: string) => void;
   onProgress: (p: Progress) => void;
+  /** Opened from the review list: the done card goes back there instead of to the next station. */
+  fromReview?: boolean;
 }
+type Props = StationProps;
 
 export function StationScreen(props: Props) {
   const found = findStation(props.stationId);
@@ -36,22 +38,13 @@ export function StationScreen(props: Props) {
       </main>
     );
   }
+  if (isRealGoal(found.station.goal)) {
+    return <RealStation key={props.stationId} {...props} world={found.world} station={found.station} index={found.index} />;
+  }
   return <StationRun key={props.stationId} {...props} world={found.world} station={found.station} index={found.index} />;
 }
 
-/** The board shows drill pieces; only the learner's pieces can be picked up. */
-function drillPosition(pieces: Pieces, learner: 'w' | 'b' | null): BoardPosition {
-  return {
-    get: (s) => pieces.get(s),
-    canPick: (s) => learner !== null && pieces.get(s)?.color === learner,
-    movesFrom: (s) =>
-      learner !== null && pieces.get(s)?.color === learner
-        ? movesFrom(pieces, s).map((m) => ({ to: m.to, captured: !!m.captured, promotion: m.promotion }))
-        : []
-  };
-}
-
-const GOAL_ICON: Record<Station['goal']['kind'], string> = {
+const GOAL_ICON: Partial<Record<Station['goal']['kind'], string>> = {
   collectStars: '⭐',
   captureAll: '😋',
   reachSquare: '🚩',
@@ -70,7 +63,7 @@ interface RunProps extends Props {
   index: number;
 }
 
-function StationRun({ profile, progress, onExit, onOpen, onProgress, world, station, index }: RunProps) {
+function StationRun({ profile, progress, onExit, onOpen, onProgress, world, station, index, fromReview }: RunProps) {
   const g = (text: string) => gendered(text, profile);
   const goal = station.goal;
   const isTap = goal.kind === 'tapSquares';
@@ -368,124 +361,49 @@ function StationRun({ profile, progress, onExit, onOpen, onProgress, world, stat
       )}
 
       {phase === 'done' && result && (
-        <div class="done-backdrop">
-          <section class="card done" role="dialog" aria-label="סיום התחנה">
-            <Confetti />
-            <div class="done-emoji" aria-hidden="true">
-              {result.stars === 3 ? '🏆' : '🎉'}
-            </div>
-            <StarRow stars={result.stars} animate size="lg" />
-            <h2 class="done-title">{result.stars === 3 ? 'מושלם!' : 'כל הכבוד!'}</h2>
-            <p class="done-line">
-              {isTap ? (
-                result.count === 0 ? (
-                  'בלי אף טעות!'
-                ) : (
-                  result.count === 1 ? (
-                    'עם טעות אחת.'
-                  ) : (
-                    <>
-                      עם <bdi dir="ltr">{result.count}</bdi> טעויות.
-                    </>
-                  )
-                )
-              ) : (
-                <>
-                  עשית את זה ב-<bdi dir="ltr">{result.count}</bdi> {result.count === 1 ? 'מסע' : 'מסעים'}.
-                </>
-              )}
-            </p>
-            {result.stars < 3 && (
-              <p class="done-tip">
-                {hints > 0
-                  ? 'רמז עולה כוכב. בלי רמזים אפשר לקבל שלושה!'
-                  : isTap
-                    ? 'בלי טעויות מקבלים שלושה כוכבים.'
-                    : <>אפשר גם ב-<bdi dir="ltr">{best}</bdi> מסעים. רוצה לנסות לשלושה כוכבים?</>}
-              </p>
-            )}
-            {nextIsNewWorld && <p class="done-world">🎊 סיימת את עולם {world.title}!</p>}
-            {!next && <p class="done-world">🎊 סיימת את כל התחנות במסלול!</p>}
-            <div class="done-actions">
-              {next && nextOpen && (
-                <button class="btn btn-primary btn-big" onClick={() => onOpen(next)}>
-                  {nextIsNewWorld ? `לעולם הבא: ${nextFound!.world.title}` : 'לתחנה הבאה'} ←
-                </button>
-              )}
-              <div class="row">
-                <button class="btn btn-secondary" onClick={() => { reset(); setPhase('play'); }}>
-                  ↺ שוב
-                </button>
-                <button class="btn btn-secondary" onClick={onExit}>
-                  🗺️ למפה
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
+        <DoneDialog
+          stars={result.stars}
+          line={
+            isTap ? (
+              mistakesLine(result.count)
+            ) : (
+              <>
+                עשית את זה ב-<bdi dir="ltr">{result.count}</bdi> {result.count === 1 ? 'מסע' : 'מסעים'}.
+              </>
+            )
+          }
+          tip={
+            result.stars < 3 &&
+            (hints > 0 ? (
+              'רמז עולה כוכב. בלי רמזים אפשר לקבל שלושה!'
+            ) : isTap ? (
+              'בלי טעויות מקבלים שלושה כוכבים.'
+            ) : (
+              <>
+                אפשר גם ב-<bdi dir="ltr">{best}</bdi> מסעים. רוצה לנסות לשלושה כוכבים?
+              </>
+            ))
+          }
+          extra={
+            fromReview ? null : nextIsNewWorld ? (
+              <p class="done-world">🎊 סיימת את עולם {world.title}!</p>
+            ) : !next ? (
+              <p class="done-world">🎊 סיימת את כל התחנות במסלול!</p>
+            ) : null
+          }
+          next={
+            !fromReview && next && nextOpen
+              ? { label: nextIsNewWorld ? `לעולם הבא: ${nextFound!.world.title}` : 'לתחנה הבאה', onClick: () => onOpen(next) }
+              : null
+          }
+          onAgain={() => {
+            reset();
+            setPhase('play');
+          }}
+          onExit={onExit}
+          exitLabel={fromReview ? '🔁 לחזרה' : undefined}
+        />
       )}
     </main>
-  );
-}
-
-function TopBar({ title, onExit }: { title: string; onExit: () => void }) {
-  return (
-    <header class="topbar">
-      <button class="btn btn-ghost btn-back" onClick={onExit} aria-label="חזרה למפה">
-        → מפה
-      </button>
-      <span class="topbar-title">{title}</span>
-      <span />
-    </header>
-  );
-}
-
-/** Plays the lesson demo frame by frame, with a replay button. */
-function LessonDemo({ station }: { station: Station }) {
-  const frames = useMemo(() => demoFrames(station), [station]);
-  const [i, setI] = useState(0);
-  const [run, setRun] = useState(0);
-
-  useEffect(() => {
-    if (i >= frames.length - 1) return;
-    const t = window.setTimeout(() => setI(i + 1), frames[i].ms);
-    return () => clearTimeout(t);
-  }, [i, run]);
-
-  const f = frames[i];
-  const ended = i >= frames.length - 1;
-  return (
-    <section class="demo" aria-label="הדגמה">
-      <Board
-        key={run}
-        position={drillPosition(f.pieces, null)}
-        orientation="w"
-        interactive={false}
-        showHints={false}
-        lastMove={f.move ? { ...f.move, animate: true, id: i + 1 } : null}
-        marks={f.marks}
-        onMove={() => {}}
-      />
-      <div class="demo-bar">
-        <p class="demo-caption" aria-live="polite">
-          {f.caption ? <RichText text={f.caption} /> : ' '}
-        </p>
-        <div class="demo-steps" aria-hidden="true">
-          {frames.map((_, n) => (
-            <span key={n} class={n <= i ? 'is-on' : ''} />
-          ))}
-        </div>
-        <button
-          class="btn btn-secondary demo-replay"
-          onClick={() => {
-            setI(0);
-            setRun((r) => r + 1);
-          }}
-          disabled={!ended}
-        >
-          ▶ שוב
-        </button>
-      </div>
-    </section>
   );
 }

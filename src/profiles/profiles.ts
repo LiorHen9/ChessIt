@@ -25,6 +25,20 @@ export interface Progress {
   vsComputer: Record<string, LevelRecord>;
   /** Current run of wins or losses against the computer at one level. Draws end it. */
   computerStreak: ComputerStreak | null;
+  /** Solved puzzles by "theme:id". `clean` = solved without a mistake or hint at least once. */
+  puzzles: Record<string, { solvedAt: number; clean: boolean }>;
+  /** The last local day (YYYY-MM-DD) the daily puzzle was solved. */
+  daily: string | null;
+  /** Placement test result (13+). Parts up to `passedPart` count as passed. */
+  placement: Placement | null;
+}
+
+export interface Placement {
+  passedPart: number;
+  score: number;
+  at: number;
+  /** The test was skipped from the offer (do not offer it again). */
+  skipped?: boolean;
 }
 
 export interface LevelRecord {
@@ -108,7 +122,10 @@ export function emptyProgress(profileId: string): Progress {
     engineLevel: 1,
     stats: { games: 0, wins: 0, draws: 0, puzzlesSolved: 0 },
     vsComputer: {},
-    computerStreak: null
+    computerStreak: null,
+    puzzles: {},
+    daily: null,
+    placement: null
   };
 }
 

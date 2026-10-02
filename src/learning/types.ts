@@ -19,9 +19,51 @@ export type Goal =
   /** Walk a pawn to the last row and promote it. */
   | { kind: 'promote' }
   /** Board lessons: tap the right squares. `ordered` asks for them one by one, by name. */
-  | { kind: 'tapSquares'; squares: Square[]; ordered?: boolean; area?: Square[] };
+  | { kind: 'tapSquares'; squares: Square[]; ordered?: boolean; area?: Square[] }
+  // ----- Real positions (chess.js: two kings, check and every rule; see learning/real.ts) -----
+  /** Checkmate within `n` learner moves. The other side answers with its best defence. */
+  | { kind: 'mateIn'; n: number }
+  /**
+   * The learner is in check and must get out. `ways` limits how (default: any way).
+   * With `findAll`, every way in `ways` must be found, one after another (the board resets).
+   */
+  | { kind: 'escapeCheck'; ways?: EscapeWay[]; findAll?: boolean }
+  /** The learner piece on `square` is in danger: make it safe in one move. */
+  | { kind: 'defend'; square: Square }
+  /**
+   * One right move (any of `moves`, in UCI: "e2e4", "e7e8q"), or any checking move with
+   * `accept: "check"`. With `line`, a scripted sequence: learner, reply, learner, ...
+   * (like a Lichess puzzle without the first move); a final mating move is always accepted.
+   */
+  | { kind: 'findBestMove'; moves?: string[]; accept?: 'check'; line?: string[] }
+  /**
+   * Play on against an opponent: `"defender"` (a lone king that runs to the middle and
+   * grabs loose pieces) or a computer level 1–8. `until: "mate"` = win by checkmate;
+   * a number = play that many moves. `coach` comments on every move (opening principles,
+   * loose pieces) and counts weak moves as mistakes.
+   */
+  | { kind: 'playOut'; opponent: 'defender' | number; until: 'mate' | number; coach?: boolean };
 
 export type GoalKind = Goal['kind'];
+
+export type EscapeWay = 'move' | 'block' | 'capture';
+
+/** Goals that run on chess.js with real positions. The others run on learning/drill.ts. */
+export const REAL_GOALS: GoalKind[] = ['mateIn', 'escapeCheck', 'defend', 'findBestMove', 'playOut'];
+
+export function isRealGoal(goal: Goal): boolean {
+  return REAL_GOALS.includes(goal.kind);
+}
+
+/** An extra position in the same station (real goals only), played after the first one. */
+export interface Round {
+  fen: string;
+  goal: Goal;
+  /** The move the other side just played, highlighted on the board ("d7d5"). */
+  lastMove?: string;
+  /** Replaces the station task for this round. */
+  text?: AgeText;
+}
 
 /**
  * One frame of a lesson demo. Fields are applied in order: `fen` replaces the position,
@@ -70,6 +112,12 @@ export interface Station {
   /** Lesson only: the animated demo. Starts from `demoFen` (or `fen`). */
   demo?: DemoStep[];
   demoFen?: string;
+  /** Real goals: the move the other side just played, highlighted ("d7d5"). */
+  lastMove?: string;
+  /** Real goals: more positions in the same station. Mistakes add up over all rounds. */
+  more?: Round[];
+  /** Real goals: what to say after a wrong move (instead of the general "not this move"). */
+  wrong?: AgeText;
 }
 
 export interface Character {
@@ -81,10 +129,12 @@ export interface Character {
 
 export interface World {
   id: string;
-  /** Part of the path: 1 = the board, 2 = the pieces. */
+  /** Part of the path: 1 = the board, 2 = the pieces, 3–8 = one world each. */
   part: number;
   title: string;
   icon: string;
   character?: Character;
   stations: Station[];
+  /** Lichess puzzles offered after the last station (a bonus node; it never locks anything). */
+  puzzles?: { theme: string; count: number };
 }

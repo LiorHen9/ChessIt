@@ -246,13 +246,14 @@ const FILES = 'abcdefgh';
   expect((await starsShown()) === 3, 'promotion in 2 moves: 3 stars');
   step('pawn promotion lesson works with the promotion picker');
 
-  // Last station: the path ends
+  // Last station of the pieces: since phase 4 the path continues to world 3
   await next();
   await p.waitForSelector('.task');
   for (const m of ['b2c3', 'c3d4', 'd4c5', 'c5b6']) await move(m);
   await waitDone();
-  expect((await p.textContent('.done')).includes('סיימת את כל התחנות'), 'end of path message');
-  step('last station shows the end-of-path message');
+  expect((await p.textContent('.done')).includes('סיימת את עולם הרגלי'), 'world complete message');
+  expect((await p.textContent('.done-actions .btn-primary')).includes('אוכלים ושומרים'), 'next world (phase 4) offered');
+  step('last pieces station leads on to world 3 (אוכלים ושומרים)');
 
   // Profile A unaffected
   await p.click('.done-actions .btn:has-text("למפה")');

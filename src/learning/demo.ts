@@ -23,7 +23,25 @@ export function demoFrames(station: Station): DemoFrame[] {
       const to = step.move.slice(2, 4) as Square;
       // Use the real move when there is one, so a pawn reaching the end turns into a queen.
       const real = movesFrom(pieces, from).find((m) => m.to === to) ?? { from, to };
+      const piece = pieces.get(from);
+      const empty = !pieces.has(to);
       pieces = applyMove(pieces, real);
+      // Castling: the king moves two squares, and the rook jumps over it.
+      if (piece?.type === 'k' && from[1] === to[1] && Math.abs(from.charCodeAt(0) - to.charCodeAt(0)) === 2) {
+        const kingSide = to[0] === 'g';
+        const rookFrom = `${kingSide ? 'h' : 'a'}${from[1]}` as Square;
+        const rookTo = `${kingSide ? 'f' : 'd'}${from[1]}` as Square;
+        const rook = pieces.get(rookFrom);
+        if (rook) pieces = applyMove(pieces, { from: rookFrom, to: rookTo });
+      }
+      // En passant: a pawn moves diagonally to an empty square and takes the pawn beside it.
+      if (piece?.type === 'p' && from[0] !== to[0] && empty) {
+        const passed = `${to[0]}${from[1]}` as Square;
+        if (pieces.get(passed)?.type === 'p') {
+          pieces = new Map(pieces);
+          pieces.delete(passed);
+        }
+      }
       move = { from, to };
     }
     const marks: BoardMarks = {

@@ -1,6 +1,8 @@
-import type { Profile, Progress } from '../profiles/profiles';
+import { byGender, type Profile, type Progress } from '../profiles/profiles';
 import { WORLDS } from '../content/index';
+import { localDay } from '../content/puzzles/index';
 import { totals } from '../learning/progress';
+import { dueItems } from '../learning/review';
 import { levelInfo } from '../engine/levels';
 
 interface Props {
@@ -12,11 +14,23 @@ interface Props {
   onResume: () => void;
   onLearn: () => void;
   onComputer: () => void;
+  onDaily: () => void;
+  onPuzzles: () => void;
+  onReview: () => void;
+  onPlacement: () => void;
 }
 
 const SOON = [{ icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }];
 
-export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume, onLearn, onComputer }: Props) {
+/** Offer the placement test to teens and adults who have not started the path or taken it. */
+export function offerPlacement(profile: Profile, progress: Progress | null): boolean {
+  return profile.ageGroup === 'teenAdult' && !progress?.placement && Object.keys(progress?.stations ?? {}).length < 3;
+}
+
+export function Home(props: Props) {
+  const { profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume, onLearn, onComputer } = props;
+  const dailyDone = progress?.daily === localDay();
+  const due = dueItems(progress).length;
   const stats = progress?.stats;
   const path = totals(WORLDS, progress);
   const pct = path.count ? Math.round((path.done / path.count) * 100) : 0;
@@ -53,6 +67,18 @@ export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGa
         </button>
       )}
 
+      {offerPlacement(profile, progress) && (
+        <button class="action action-placement" onClick={props.onPlacement}>
+          <span class="action-icon" aria-hidden="true">
+            🧭
+          </span>
+          <span class="action-text">
+            <span class="action-title">{byGender(profile, 'כבר מכיר שחמט?', 'כבר מכירה שחמט?', 'כבר מכירים שחמט?')}</span>
+            <span class="action-sub">מבחן כניסה קצר שפותח את העולמות שכבר ידועים לך</span>
+          </span>
+        </button>
+      )}
+
       <button class="action action-learn" onClick={onLearn}>
         <span class="action-icon" aria-hidden="true">
           🗺️
@@ -61,7 +87,7 @@ export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGa
           <span class="action-title">מסלול הלימוד</span>
           <span class="action-sub">
             {path.done === 0 ? (
-              'לומדים את הלוח ואת הכלים, צעד אחר צעד'
+              'מהלוח והכלים ועד משחק שלם, צעד אחר צעד'
             ) : (
               <>
                 <bdi dir="ltr">{path.done}</bdi> מתוך <bdi dir="ltr">{path.count}</bdi> תחנות · ★{' '}
@@ -74,6 +100,49 @@ export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGa
           </span>
         </span>
       </button>
+
+      <div class="home-pair">
+        <button class={`action action-daily ${dailyDone ? 'is-done' : ''}`} onClick={props.onDaily} data-testid="home-daily">
+          <span class="action-icon" aria-hidden="true">
+            {dailyDone ? '✅' : '📅'}
+          </span>
+          <span class="action-text">
+            <span class="action-title">חידה יומית</span>
+            <span class="action-sub">{dailyDone ? 'נפתרה היום!' : 'אותה חידה לכל המשפחה'}</span>
+          </span>
+        </button>
+        <button class="action action-puzzles" onClick={props.onPuzzles}>
+          <span class="action-icon" aria-hidden="true">
+            🧩
+          </span>
+          <span class="action-text">
+            <span class="action-title">חידות</span>
+            <span class="action-sub">
+              {progress?.stats.puzzlesSolved ? (
+                <>
+                  נפתרו <bdi dir="ltr">{progress.stats.puzzlesSolved}</bdi>
+                </>
+              ) : (
+                'מט, מזלג, סיכה ועוד'
+              )}
+            </span>
+          </span>
+        </button>
+      </div>
+
+      {due > 0 && (
+        <button class="action action-review" onClick={props.onReview} data-testid="home-review">
+          <span class="action-icon" aria-hidden="true">
+            🔁
+          </span>
+          <span class="action-text">
+            <span class="action-title">חזרה</span>
+            <span class="action-sub">
+              {due === 1 ? 'פריט אחד מחכה לחזרה' : <><bdi dir="ltr">{due}</bdi> פריטים מחכים לחזרה</>}
+            </span>
+          </span>
+        </button>
+      )}
 
       <button class="action action-primary" onClick={onNewGame}>
         <span class="action-icon" aria-hidden="true">
