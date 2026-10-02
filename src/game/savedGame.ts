@@ -1,3 +1,4 @@
+import type { Color } from 'chess.js';
 import { dbDelete, dbGet, dbPut } from '../storage/db';
 
 export interface GameOptions {
@@ -7,6 +8,12 @@ export interface GameOptions {
   hints: boolean;
 }
 
+/** The computer as an opponent: its level and the colour it plays. */
+export interface ComputerOpponent {
+  level: number;
+  color: Color;
+}
+
 export interface SavedGame {
   whiteId: string;
   blackId: string;
@@ -14,6 +21,10 @@ export interface SavedGame {
   moves: string[];
   options: GameOptions;
   startedAt: number;
+  /** Where the game started (parent-child mode removes pieces). Missing in games saved before phase 3. */
+  startFen?: string;
+  /** Set when playing against the computer. */
+  computer?: ComputerOpponent;
 }
 
 const KEY = 'currentGame';

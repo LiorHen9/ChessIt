@@ -1,6 +1,7 @@
 import type { Profile, Progress } from '../profiles/profiles';
 import { WORLDS } from '../content/index';
 import { totals } from '../learning/progress';
+import { levelInfo } from '../engine/levels';
 
 interface Props {
   profile: Profile;
@@ -10,17 +11,16 @@ interface Props {
   onNewGame: () => void;
   onResume: () => void;
   onLearn: () => void;
+  onComputer: () => void;
 }
 
-const SOON = [
-  { icon: '🤖', title: 'נגד המחשב', text: 'יריב שמתאים את עצמו אליך' },
-  { icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }
-];
+const SOON = [{ icon: '📱', title: 'חדר לשני טלפונים', text: 'משחקים כל אחד מהמכשיר שלו' }];
 
-export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume, onLearn }: Props) {
+export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGame, onResume, onLearn, onComputer }: Props) {
   const stats = progress?.stats;
   const path = totals(WORLDS, progress);
   const pct = path.count ? Math.round((path.done / path.count) * 100) : 0;
+  const cpu = levelInfo(progress?.engineLevel ?? 1);
   return (
     <main class="screen">
       <header class="home-head">
@@ -82,6 +82,18 @@ export function Home({ profile, progress, hasSavedGame, onSwitchProfile, onNewGa
         <span class="action-text">
           <span class="action-title">משחק לשניים</span>
           <span class="action-sub">על אותו טלפון, מעבירים מיד ליד</span>
+        </span>
+      </button>
+
+      <button class="action action-computer" onClick={onComputer}>
+        <span class="action-icon" aria-hidden="true">
+          🤖
+        </span>
+        <span class="action-text">
+          <span class="action-title">נגד המחשב</span>
+          <span class="action-sub">
+            {cpu.icon} רמה <bdi dir="ltr">{cpu.level}</bdi> · {cpu.name}
+          </span>
         </span>
       </button>
 

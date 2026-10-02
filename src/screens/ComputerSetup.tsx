@@ -1,34 +1,43 @@
 import { useState } from 'preact/hooks';
-import { byGender, GUEST, type Profile } from '../profiles/profiles';
-import type { GameOptions } from '../game/savedGame';
+import type { Color } from 'chess.js';
+import type { Profile, Progress } from '../profiles/profiles';
+import { clampLevel, LEVELS, levelInfo, usesStockfish } from '../engine/levels';
 import { HandicapPicker, NO_HANDICAP, type Handicap } from '../components/HandicapPicker';
 import { handicapFen } from '../chess/handicap';
 import { other } from '../chess/rules';
 
-type ColorChoice = 'w' | 'b' | 'random';
+type ColorChoice = Color | 'random';
+
+export interface ComputerGameChoice {
+  level: number;
+  /** The colour the player plays. */
+  color: Color;
+  hints: boolean;
+  startFen: string;
+}
 
 interface Props {
   me: Profile;
-  others: Profile[];
-  onStart: (white: Profile, black: Profile, options: GameOptions, startFen: string) => void;
+  progress: Progress | null;
+  onStart: (choice: ComputerGameChoice) => void;
   onCancel: () => void;
 }
 
-export function GameSetup({ me, others, onStart, onCancel }: Props) {
-  const opponents = [...others, GUEST];
-  const [opponentId, setOpponentId] = useState(opponents[0].id);
+export function ComputerSetup({ me, progress, onStart, onCancel }: Props) {
+  const suggested = clampLevel(progress?.engineLevel ?? 1);
+  const [level, setLevel] = useState(suggested);
   const [color, setColor] = useState<ColorChoice>('w');
-  const [rotate, setRotate] = useState(true);
   const [hints, setHints] = useState(true);
   const [handicap, setHandicap] = useState<Handicap>(NO_HANDICAP);
-  const opponent = opponents.find((p) => p.id === opponentId) ?? GUEST;
+  const info = levelInfo(level);
+  const record = progress?.vsComputer[String(level)];
 
-  const fenFor = (myColor: 'w' | 'b') =>
+  const fenFor = (myColor: Color) =>
     handicap.enabled ? handicapFen(handicap.giver === 'me' ? myColor : other(myColor), handicap.pieces) : handicapFen('w', []);
 
   function start() {
-    const meWhite = color === 'random' ? Math.random() < 0.5 : color === 'w';
-    onStart(meWhite ? me : opponent, meWhite ? opponent : me, { rotate, hints }, fenFor(meWhite ? 'w' : 'b'));
+    const myColor: Color = color === 'random' ? (Math.random() < 0.5 ? 'w' : 'b') : color;
+    onStart({ level, color: myColor, hints, startFen: fenFor(myColor) });
   }
 
   return (
@@ -37,29 +46,48 @@ export function GameSetup({ me, others, onStart, onCancel }: Props) {
         <button class="btn btn-ghost btn-back" onClick={onCancel}>
           → חזרה
         </button>
-        <span class="topbar-title">משחק חדש</span>
+        <span class="topbar-title">נגד המחשב</span>
         <span />
       </header>
 
       <div class="form">
         <fieldset class="field">
-          <legend class="field-label">נגד מי {me.name} {byGender(me, 'משחק', 'משחקת')}?</legend>
-          <div class="opponent-list">
-            {opponents.map((p) => (
+          <legend class="field-label">באיזו רמה?</legend>
+          <div class="level-grid">
+            {LEVELS.map((l) => (
               <button
                 type="button"
-                key={p.id}
-                class={`opponent ${p.id === opponentId ? 'is-on' : ''}`}
-                aria-pressed={p.id === opponentId}
-                onClick={() => setOpponentId(p.id)}
+                key={l.level}
+                class={`level ${l.level === level ? 'is-on' : ''}`}
+                aria-pressed={l.level === level}
+                data-level={l.level}
+                onClick={() => setLevel(l.level)}
               >
-                <span class="avatar avatar-sm" aria-hidden="true">
-                  {p.avatar}
+                <span class="level-icon" aria-hidden="true">
+                  {l.icon}
                 </span>
-                <span>{p.name}</span>
+                <span class="level-name">{l.name}</span>
+                <span class="level-num">
+                  רמה <bdi dir="ltr">{l.level}</bdi>
+                </span>
+                {l.level === suggested && <span class="level-tag">שלך</span>}
               </button>
             ))}
           </div>
+          <p class="level-blurb" aria-live="polite">
+            <strong>
+              {info.icon} {info.name}:
+            </strong>{' '}
+            {info.blurb}
+            {record && record.games > 0 && (
+              <span class="level-record">
+                <bdi dir="ltr">{record.wins}</bdi> ניצחונות מתוך <bdi dir="ltr">{record.games}</bdi>
+              </span>
+            )}
+          </p>
+          {usesStockfish(level) && (
+            <p class="fineprint">ברמות 3 ומעלה המחשב צריך אינטרנט בפעם הראשונה כדי להתכונן.</p>
+          )}
         </fieldset>
 
         <fieldset class="field">
@@ -79,14 +107,6 @@ export function GameSetup({ me, others, onStart, onCancel }: Props) {
         </fieldset>
 
         <label class="toggle">
-          <input type="checkbox" checked={rotate} onChange={(e) => setRotate((e.target as HTMLInputElement).checked)} />
-          <span class="toggle-text">
-            <span class="toggle-title">לסובב את הלוח בכל תור</span>
-            <span class="toggle-hint">מי שתורו תמיד רואה את הכלים שלו למטה</span>
-          </span>
-        </label>
-
-        <label class="toggle">
           <input type="checkbox" checked={hints} onChange={(e) => setHints((e.target as HTMLInputElement).checked)} />
           <span class="toggle-text">
             <span class="toggle-title">להראות לאן אפשר לזוז</span>
@@ -98,13 +118,13 @@ export function GameSetup({ me, others, onStart, onCancel }: Props) {
           value={handicap}
           onChange={setHandicap}
           meLabel={me.name}
-          themLabel={opponent.name}
+          themLabel="המחשב"
           previewFen={fenFor(color === 'b' ? 'b' : 'w')}
           orientation={color === 'b' ? 'b' : 'w'}
         />
 
         <button class="btn btn-primary btn-big" onClick={start}>
-          יוצאים לדרך!
+          {info.icon} יוצאים לדרך!
         </button>
       </div>
     </main>

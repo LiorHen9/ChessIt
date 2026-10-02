@@ -34,7 +34,20 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
+        // Stockfish (~1.8MB) is not part of the first load: it is cached the first time
+        // someone plays level 3+ or opens a game summary (see runtimeCaching below).
+        globIgnores: ['engine/**'],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/engine/stockfish-'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'chessit-engine',
+              // File names carry the Stockfish version, so an upgrade fetches new files.
+              expiration: { maxEntries: 6 },
+              cacheableResponse: { statuses: [200] }
+            }
+          },
           {
             // Hebrew font from Google Fonts: cached on first load, then works offline.
             urlPattern: ({ url }) =>

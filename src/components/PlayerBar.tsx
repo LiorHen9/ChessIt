@@ -10,9 +10,11 @@ interface Props {
   /** Material lead in points; shown only when positive. */
   advantage: number;
   active: boolean;
+  /** Text of the badge shown while active ("תורך", or "חושב…" for the computer). */
+  badge?: string;
 }
 
-export function PlayerBar({ profile, color, captured, advantage, active }: Props) {
+export function PlayerBar({ profile, color, captured, advantage, active, badge = 'תורך' }: Props) {
   const opponent: Color = color === 'w' ? 'b' : 'w';
   return (
     <div class={`player ${active ? 'is-active' : ''}`}>
@@ -33,7 +35,7 @@ export function PlayerBar({ profile, color, captured, advantage, active }: Props
           {advantage > 0 && <span class="advantage">+{advantage}</span>}
         </span>
       </div>
-      {active && <span class="turn-badge">תורך</span>}
+      {active && <span class={`turn-badge ${badge === 'תורך' ? '' : 'is-thinking'}`}>{badge}</span>}
     </div>
   );
 }

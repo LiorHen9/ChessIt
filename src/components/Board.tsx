@@ -53,6 +53,10 @@ export interface BoardMarks {
   /** Pulsing rings for a hint. */
   hint?: Square[];
   arrows?: [Square, Square][];
+  /** Green arrows: a good move, or the better move in the game summary. */
+  arrowsGood?: [Square, Square][];
+  /** Red arrows: the mistake in the game summary. */
+  arrowsBad?: [Square, Square][];
   dots?: Square[];
   /** Write the square name on these squares. */
   labels?: Square[];
@@ -292,15 +296,27 @@ export function Board({
     return <circle key={`dot-${sq}`} cx={cx} cy={cy} r={S * 0.17} class="mark-dot" />;
   });
 
-  const arrows = (marks.arrows ?? []).map(([from, to]) => {
-    const a = center(from);
-    const b = center(to);
-    const len = Math.hypot(b.cx - a.cx, b.cy - a.cy) || 1;
-    // Stop short of the target centre so the head sits inside the square.
-    const ex = b.cx - ((b.cx - a.cx) / len) * 22;
-    const ey = b.cy - ((b.cy - a.cy) / len) * 22;
-    return <line key={`arrow-${from}${to}`} x1={a.cx} y1={a.cy} x2={ex} y2={ey} class="mark-arrow" marker-end="url(#arrowhead)" />;
-  });
+  const drawArrows = (list: [Square, Square][] | undefined, tone: '' | '-good' | '-bad') =>
+    (list ?? []).map(([from, to]) => {
+      const a = center(from);
+      const b = center(to);
+      const len = Math.hypot(b.cx - a.cx, b.cy - a.cy) || 1;
+      // Stop short of the target centre so the head sits inside the square.
+      const ex = b.cx - ((b.cx - a.cx) / len) * 22;
+      const ey = b.cy - ((b.cy - a.cy) / len) * 22;
+      return (
+        <line
+          key={`arrow${tone}-${from}${to}`}
+          x1={a.cx}
+          y1={a.cy}
+          x2={ex}
+          y2={ey}
+          class={`mark-arrow${tone}`}
+          marker-end={`url(#arrowhead${tone})`}
+        />
+      );
+    });
+  const arrows = [...drawArrows(marks.arrows, ''), ...drawArrows(marks.arrowsBad, '-bad'), ...drawArrows(marks.arrowsGood, '-good')];
 
   const labels = (marks.labels ?? []).map((sq) => {
     const { cx, cy } = center(sq);
@@ -389,6 +405,16 @@ export function Board({
           <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 Z" class="mark-arrowhead" />
           </marker>
+          {marks.arrowsGood && (
+            <marker id="arrowhead-good" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" class="mark-arrowhead-good" />
+            </marker>
+          )}
+          {marks.arrowsBad && (
+            <marker id="arrowhead-bad" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" class="mark-arrowhead-bad" />
+            </marker>
+          )}
         </defs>
         {squares}
         {coords}

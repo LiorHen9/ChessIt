@@ -29,7 +29,9 @@
 - `src/chess/rules.ts` – עזרים מעל chess.js (שמות כלים בעברית, תוצאות משחק, כלים שנאכלו).
 - `src/profiles/profiles.ts` – פרופילים, התקדמות, סטטיסטיקה, `byGender`.
 - `src/storage/db.ts` – עטיפה ל-IndexedDB. כל שינוי במאגרים מחייב העלאת `SCHEMA_VERSION` והגירה.
-- `src/game/savedGame.ts` – משחק פתוח ופרופיל אחרון ב-`meta`.
+- `src/game/savedGame.ts` – משחק פתוח (כולל `startFen` ו-`computer`) ופרופיל אחרון ב-`meta`. `src/game/analysis.ts` – סיכום משחק.
+- `src/engine/` – ממשק `Engine`, ‏`levels.ts` (שמות הרמות וטבלת הכיול), KidEngine לרמות 1–2 (`kid.ts` + Worker), ‏`StockfishEngine` לרמות 3–8 ולסיכום. קובצי Stockfish 19 lite נמצאים ב-`public/engine/` (מתועדים ב-README.txt שם).
+- `src/chess/handicap.ts` – מצב הורה-ילד (FEN בלי חלק מהכלים).
 - `src/content/worlds/*.json` – תוכן המסלול (עולמות ותחנות). `src/content/index.ts` טוען ובודק. בדיקה מהטרמינל: `bun tests/content/check.ts`.
 - `src/learning/` – תנועת כלים בתרגולים (`drill.ts`, בלי chess.js), בודק מטרות ופותר (`goals.ts`), כוכבים ופתיחת תחנות (`progress.ts`), טקסט לפי גיל ומין (`text.ts`).
 - טקסט תוכן מוצג דרך `RichText` (שומר על e4 ומספרים משמאל לימין, ומוסיף `︎` לסמלי כלים).
@@ -49,6 +51,9 @@
 - **אם npm חסום בסביבת העבודה** (כך היה בסשנים הקודמים): לשכפל את preact (תגית 10.x האחרונה) ואת chess.js מ-GitHub לתיקיית scratchpad, למפות אותם ב-`paths` של tsconfig זמני, ולהריץ:
   - בדיקת טיפוסים: `tsc -p <tsconfig זמני>` (שגיאת ה-import של `styles.css` צפויה מקומית ואפשר להתעלם ממנה).
   - בנייה: `bun build src/main.tsx` עם אותם `paths`. ל-chess.js צריך קובץ דמה `src/pgn.ts`, כי מנתח ה-PGN נוצר בזמן בנייה.
-  - בדיקה בדפדפן: Playwright (מותקן גלובלית) מול `python3 -m http.server`. ראו `tests/e2e/phase1.cjs` ו-`tests/e2e/phase2.cjs` (צריך להריץ את כולן בכל שלב).
+    bun לא בונה את ה-Worker מ-`new URL('./kid.worker.ts', import.meta.url)`, ולכן בונים גם את `src/engine/kid.worker.ts` כ-entry נפרד ומחליפים בפלט את `./kid.worker.ts` ב-`./kid.worker.js` (ב-Vite זה קורה לבד). מעתיקים את `public/` לתיקיית הפלט, כולל `engine/`.
+  - בדיקה בדפדפן: Playwright (מותקן גלובלית, `NODE_PATH=$(npm root -g)`) מול `python3 -m http.server 4173 -d <תיקיית הפלט>`. ראו `tests/e2e/phase1.cjs`, ‏`phase2.cjs` ו-`phase3.cjs` (צריך להריץ את כולן בכל שלב). `phase3.cjs` משתמש ב-`?seed=` כדי שתשובות המחשב יהיו קבועות, וב-`window.__chessit` שקיים רק במצב הזה.
+  - סימולציית רמות: `bun --tsconfig-override=<tsconfig זמני> tests/engine/sim.ts` (‏100 משחקים לזוג, כמה דקות). עם `ladder 20 --only-ladder` גם רמות 3–8 מול Stockfish ב-node.
+  - שרת ישן מסשן קודם עלול לתפוס את פורט 4173: לבדוק ש-`curl localhost:4173` מחזיר את הבנייה הנוכחית.
   - חבילות מ-GitHub משמשות רק לבדיקה מקומית ולא נכנסות למאגר.
 - גופני Google חסומים בסביבת הבדיקה, ולכן מקומית מוצג גופן חלופי.
