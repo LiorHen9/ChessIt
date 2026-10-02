@@ -15,8 +15,8 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'שחמט ביחד',
-        short_name: 'שחמט',
+        name: 'ChessIt',
+        short_name: 'ChessIt',
         description: 'לומדים שחמט ביחד – לילדים ולמבוגרים',
         lang: 'he',
         dir: 'rtl',

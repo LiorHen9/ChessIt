@@ -36,7 +36,7 @@ export function App() {
     <main class="home">
       <header class="hero">
         <p class="eyebrow">שלב 0 · התשתית מוכנה</p>
-        <h1>שחמט ביחד</h1>
+        <h1>ChessIt</h1>
         <p class="lead">לומדים שחמט צעד אחר צעד – ילדים, הורים, כל המשפחה.</p>
       </header>
 
