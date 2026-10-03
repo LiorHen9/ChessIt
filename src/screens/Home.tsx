@@ -29,6 +29,10 @@ interface Props {
   onSettings: () => void;
   /** The profile changed here (theme) and was saved. */
   onProfile: (p: Profile) => void;
+  /** Show the one-time "back up the family" reminder (storage/backupState.ts). */
+  backupNudge: boolean;
+  onBackup: () => void;
+  onDismissNudge: () => void;
 }
 
 /** Offer the placement test to teens and adults who have not started the path or taken it. */
@@ -72,6 +76,23 @@ export function Home(props: Props) {
           </p>
         )}
       </header>
+
+      {props.backupNudge && (
+        <section class="card nudge" data-testid="backup-nudge" aria-labelledby="nudge-title">
+          <p class="nudge-title" id="nudge-title">
+            💾 כבר <bdi dir="ltr">20</bdi> תחנות!
+          </p>
+          <p class="nudge-text">כדאי לגבות את ההתקדמות של כל המשפחה לקובץ, למקרה שהטלפון יוחלף או יאבד. לוקח חצי דקה.</p>
+          <div class="row">
+            <button class="btn btn-primary" data-testid="nudge-backup" onClick={props.onBackup}>
+              לגבות עכשיו
+            </button>
+            <button class="btn btn-secondary" data-testid="nudge-dismiss" onClick={props.onDismissNudge}>
+              לא עכשיו
+            </button>
+          </div>
+        </section>
+      )}
 
       {hasSavedGame && (
         <button class="action action-resume" onClick={onResume}>

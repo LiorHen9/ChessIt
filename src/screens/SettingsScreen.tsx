@@ -17,11 +17,13 @@ interface Props {
   /** The profile changed (theme or PIN) and was saved. */
   onProfile: (p: Profile) => void;
   onEdit: () => void;
+  onBackup: () => void;
+  onAbout: (focus?: 'report') => void;
 }
 
 type PinStep = 'idle' | 'new' | 'confirm' | 'saved' | 'removed';
 
-export function SettingsScreen({ profile, onBack, onProfile, onEdit }: Props) {
+export function SettingsScreen({ profile, onBack, onProfile, onEdit, onBackup, onAbout }: Props) {
   const settings = useSettings();
   const voice = useHebrewVoice();
   const [pinStep, setPinStep] = useState<PinStep>('idle');
@@ -169,6 +171,19 @@ export function SettingsScreen({ profile, onBack, onProfile, onEdit }: Props) {
         <h2 class="section-title">👤 הפרופיל</h2>
         <button class="btn btn-secondary" onClick={onEdit}>
           ✎ שם, דמות וגיל
+        </button>
+      </section>
+
+      <section class="settings-section">
+        <h2 class="section-title">👨‍👩‍👧 כל המשפחה</h2>
+        <button class="btn btn-secondary" data-testid="settings-backup" onClick={onBackup}>
+          💾 גיבוי ושחזור
+        </button>
+        <button class="btn btn-secondary" data-testid="settings-about" onClick={() => onAbout()}>
+          ℹ️ אודות ופרטיות
+        </button>
+        <button class="btn btn-secondary" data-testid="settings-report" onClick={() => onAbout('report')}>
+          🐞 מצאת בעיה?
         </button>
       </section>
     </main>

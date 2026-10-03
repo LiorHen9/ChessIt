@@ -1,0 +1,229 @@
+/* Backup, About and problem report (lazy screens; Vite puts this in their own CSS file). */
+
+.family .settings-section {
+  gap: 10px;
+}
+
+.fam-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fam-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.fam-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.fam-name {
+  font-weight: 600;
+}
+
+.fam-sub {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.fam-badge {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.fam-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  border: 0;
+}
+
+.fam-title {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+legend.fam-title {
+  float: inline-start;
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+.fam-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fam-choices .action:disabled {
+  opacity: 0.5;
+}
+
+.fam-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.fam-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  text-align: start;
+  cursor: pointer;
+}
+
+.fam-option.is-on {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 3px var(--brand);
+}
+
+.fam-warn {
+  box-shadow: var(--shadow), inset 0 0 0 2px var(--danger);
+}
+
+.fam-done {
+  text-align: center;
+}
+
+.fam-fine {
+  text-align: start;
+}
+
+/* ---------- About ---------- */
+
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.about-hero .logo {
+  margin: 0;
+}
+
+.about-hero .settings-note {
+  text-align: start;
+}
+
+.about-version {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.about-link {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.about-list {
+  margin: 0;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.about a:not(.btn):not(.credit) {
+  color: var(--brand);
+  font-weight: 600;
+  /* A text link is short; padding keeps the touch area near 44px without moving the text. */
+  display: inline-block;
+  padding-block: 11px;
+  margin-block: -11px;
+}
+
+.credits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.credit {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name licence' 'what licence';
+  align-items: center;
+  column-gap: 10px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.credit-name {
+  grid-area: name;
+  font-weight: 600;
+}
+
+.credit-what {
+  grid-area: what;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+.credit-licence {
+  grid-area: licence;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.report-box {
+  margin: 0;
+  padding: 12px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+}
+
+.about-danger {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.about-danger .btn-danger-text {
+  align-self: stretch;
+}

@@ -5,9 +5,11 @@ interface Props {
   onPick: (p: Profile) => void;
   onCreate: () => void;
   onEdit: (p: Profile) => void;
+  onBackup: () => void;
+  onAbout: () => void;
 }
 
-export function ProfilePicker({ profiles, onPick, onCreate, onEdit }: Props) {
+export function ProfilePicker({ profiles, onPick, onCreate, onEdit, onBackup, onAbout }: Props) {
   const first = profiles.length === 0;
   return (
     <main class="screen">
@@ -39,6 +41,15 @@ export function ProfilePicker({ profiles, onPick, onCreate, onEdit }: Props) {
       </button>
 
       <p class="fineprint">הפרופילים נשמרים רק בטלפון הזה.</p>
+
+      <nav class="picker-links" aria-label="כל המשפחה">
+        <button class="btn btn-ghost" data-testid="picker-backup" onClick={onBackup}>
+          💾 גיבוי ושחזור
+        </button>
+        <button class="btn btn-ghost" data-testid="picker-about" onClick={onAbout}>
+          ℹ️ אודות ופרטיות
+        </button>
+      </nav>
     </main>
   );
 }

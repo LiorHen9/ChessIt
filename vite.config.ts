@@ -1,13 +1,21 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
 
 // GitHub Pages serves the site under /<repo-name>/.
 // The deploy workflow sets BASE_PATH; locally the app runs at /.
 const base = process.env.BASE_PATH ?? '/';
+// Shown in the About screen (src/app/version.ts).
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 export default defineConfig({
   base,
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __COMMIT__: JSON.stringify((process.env.GITHUB_SHA ?? '').slice(0, 7))
+  },
   plugins: [
     preact(),
     VitePWA({
@@ -36,10 +44,13 @@ export default defineConfig({
         // Rooms talk to Firebase (another origin, REST + a live event stream). No route below
         // matches it, so the Service Worker never caches or answers those requests – they always go
         // to the network. Keep it that way: a cached room would be an old game.
+        // The Hebrew font (fonts/rubik.woff2) is in the repo and precached like the code: no request
+        // to Google, and it works offline from the first visit.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json}'],
         // Stockfish (~1.8MB) is not part of the first load: it is cached the first time
         // someone plays level 3+ or opens a game summary (see runtimeCaching below).
-        globIgnores: ['engine/**'],
+        // The link-preview picture (og-image.png) is only for WhatsApp and friends, not for the app.
+        globIgnores: ['engine/**', 'og-image.png'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.includes('/engine/stockfish-'),
@@ -49,17 +60,6 @@ export default defineConfig({
               // File names carry the Stockfish version, so an upgrade fetches new files.
               expiration: { maxEntries: 6 },
               cacheableResponse: { statuses: [200] }
-            }
-          },
-          {
-            // Hebrew font from Google Fonts: cached on first load, then works offline.
-            urlPattern: ({ url }) =>
-              url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] }
             }
           }
         ]

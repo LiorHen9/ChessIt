@@ -142,6 +142,10 @@ export function Board({
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [promotion, setPromotion] = useState<{ from: Square; to: Square; dragged: boolean; color: Color } | null>(null);
+  // Keyboard: a cursor square moved with the arrow keys; Enter / Space acts like a tap on it.
+  // The cursor is drawn only while the board has keyboard focus.
+  const [cursor, setCursor] = useState<Square | null>(null);
+  const [keyboard, setKeyboard] = useState(false);
 
   // Sounds follow what the board shows: a new last move is a move, a capture (fewer pieces) or a
   // check. Take-backs and resets (more pieces, or no move) stay silent.
@@ -184,7 +188,60 @@ export function Board({
     return true;
   }
 
+  /** A tap (or Enter) on a square that does not start a drag. */
+  function tapSquare(sq: Square) {
+    if (onSquareTap) {
+      onSquareTap(sq);
+      return;
+    }
+    if (selected && targets.has(sq)) {
+      tryMove(selected, sq, false);
+      return;
+    }
+    if (position.canPick(sq)) {
+      setSelected(selected === sq ? null : sq);
+    } else {
+      if (selected) illegal(selected, sq);
+      setSelected(null);
+    }
+  }
+
+  function firstCursor(): Square {
+    if (selected) return selected;
+    const mine = ALL_SQUARES.filter((sq) => position.canPick(sq));
+    // Start near the middle of the player's pieces.
+    return mine[Math.floor(mine.length / 2)] ?? (orientation === 'w' ? 'e2' : 'e7');
+  }
+
+  function onKeyDown(e: KeyboardEvent) {
+    if (!interactive || promotion) return;
+    const dirs: Record<string, [number, number]> = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+    const at = cursor ?? firstCursor();
+    if (e.key in dirs) {
+      e.preventDefault();
+      setKeyboard(true);
+      if (!cursor) {
+        setCursor(at);
+        return;
+      }
+      // Screen directions: the board is turned for black.
+      const [dx, dy] = dirs[e.key].map((v) => (orientation === 'w' ? v : -v));
+      const f = Math.min(7, Math.max(0, FILES.indexOf(at[0]) + dx));
+      const r = Math.min(8, Math.max(1, Number(at[1]) + dy));
+      setCursor(`${FILES[f]}${r}` as Square);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setKeyboard(true);
+      setCursor(at);
+      tapSquare(at);
+    } else if (e.key === 'Escape' && selected) {
+      e.preventDefault();
+      setSelected(null);
+    }
+  }
+
   function onPointerDown(e: PointerEvent) {
+    setKeyboard(false);
     if (!interactive || promotion) return;
     const { x, y } = toSvg(e);
     const sq = squareAt(x, y, orientation);
@@ -259,6 +316,7 @@ export function Board({
         {has(marks.bad, sq) && overlay('sq-bad')}
         {selected === sq && overlay('sq-selected')}
         {checkSquare === sq && <circle cx={x + S / 2} cy={y + S / 2} r={S * 0.48} class="sq-check" />}
+        {keyboard && cursor === sq && <rect x={x + 4} y={y + 4} width={S - 8} height={S - 8} rx={8} class="sq-cursor" />}
       </g>
     );
   });
@@ -408,6 +466,16 @@ export function Board({
     }
   }
 
+  // What the keyboard cursor is on, for screen readers ("e4: פרש לבן, נבחר").
+  let cursorText = '';
+  if (keyboard && cursor) {
+    const p = position.get(cursor);
+    const parts = [p ? `${PIECE_NAME[p.type]} ${p.color === 'w' ? 'לבן' : 'שחור'}` : 'ריק'];
+    if (selected === cursor) parts.push('נבחר');
+    else if (targets.has(cursor)) parts.push(targets.get(cursor) ? 'אפשר לאכול כאן' : 'אפשר לזוז לכאן');
+    cursorText = `${cursor}: ${parts.join(', ')}`;
+  }
+
   return (
     <div class="board-shell" dir="ltr">
       <svg
@@ -415,8 +483,12 @@ export function Board({
         viewBox={`0 0 ${8 * S} ${8 * S}`}
         class={`board ${interactive ? 'is-live' : ''}`}
         data-orientation={orientation}
-        role="img"
-        aria-label="לוח שחמט"
+        // A live board takes keyboard focus: arrows move a cursor, Enter or Space picks and moves.
+        role={interactive ? 'application' : 'img'}
+        aria-label={interactive ? 'לוח שחמט. החצים זזים בין המשבצות, ו-Enter או רווח בוחרים כלי ומזיזים אותו.' : 'לוח שחמט'}
+        tabIndex={interactive ? 0 : undefined}
+        onKeyDown={onKeyDown}
+        onBlur={() => setKeyboard(false)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -451,6 +523,10 @@ export function Board({
         {burst}
         {dragged}
       </svg>
+
+      <p class="visually-hidden" aria-live="polite" data-testid="board-cursor">
+        {cursorText}
+      </p>
 
       {promotion && (
         <div class="promo" dir="rtl" role="dialog" aria-label="בחירת כלי להכתרה">

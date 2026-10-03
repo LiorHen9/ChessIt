@@ -27,7 +27,10 @@ export const CLEAN: Theme = {
     'pc-bl': '#000000',
     'pc-bd': '#ececec',
     'qr-ink': '#000000',
-    'qr-paper': '#ffffff'
+    'qr-paper': '#ffffff',
+    good: '#237032',
+    danger: '#b8392a',
+    'danger-ink': '#ffffff'
   },
   dark: {
     bg: '#151a16',
@@ -49,7 +52,10 @@ export const CLEAN: Theme = {
     'pc-bl': '#000000',
     'pc-bd': '#ececec',
     'qr-ink': '#000000',
-    'qr-paper': '#ffffff'
+    'qr-paper': '#ffffff',
+    good: '#69db7c',
+    danger: '#ff8a75',
+    'danger-ink': '#1a0f0d'
   },
   pieceSet: 'cburnett',
   celebrate: 'confetti',

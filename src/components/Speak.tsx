@@ -52,11 +52,13 @@ export interface Message {
 export function Feedback({ message, idle }: { message: Message | null; idle?: ComponentChildren }) {
   useAutoSpeak(message ? (message.speech ?? message.text) : null, message?.id);
   return (
-    <p class={`feedback ${message ? `is-${message.tone}` : ''}`} aria-live="polite" key={message?.id ?? 0}>
+    // The paragraph stays in place (a live region must exist before its text changes, or screen
+    // readers miss it); the message inside is new each time, which replays the pop animation.
+    <p class={`feedback ${message ? `is-${message.tone}` : ''}`} aria-live="polite">
       {message ? (
-        <>
+        <span class="feedback-msg" key={message.id}>
           <RichText text={message.text} /> <SpeakButton text={message.speech ?? message.text} class="speak-inline" />
-        </>
+        </span>
       ) : (
         (idle ?? ' ')
       )}

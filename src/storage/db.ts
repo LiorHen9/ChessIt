@@ -89,6 +89,53 @@ export async function dbDelete(store: StoreName, key: string): Promise<void> {
   }
 }
 
+export async function dbKeys(store: StoreName): Promise<string[]> {
+  try {
+    return (await run<IDBValidKey[]>(store, 'readonly', (s) => s.getAllKeys())).map(String);
+  } catch {
+    return [...memory.get(store)!.keys()];
+  }
+}
+
+/** One change in a `dbWrite` batch. `clear` empties the whole store. */
+export type DbOp =
+  | { store: StoreName; op: 'put'; key: string; value: unknown }
+  | { store: StoreName; op: 'delete'; key: string }
+  | { store: StoreName; op: 'clear' };
+
+/**
+ * Several changes over several stores, all or nothing (one IndexedDB transaction).
+ * Used by restoring a backup and by "delete all data": a failure halfway leaves the old data as it was.
+ */
+export async function dbWrite(ops: DbOp[]): Promise<void> {
+  const stores = [...new Set(ops.map((o) => o.store))];
+  if (stores.length === 0) return;
+  const db = await openDb();
+  if (!db) {
+    for (const o of ops) {
+      const m = memory.get(o.store)!;
+      if (o.op === 'clear') m.clear();
+      else if (o.op === 'delete') m.delete(o.key);
+      else m.set(o.key, o.value);
+    }
+    return;
+  }
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(stores, 'readwrite');
+    for (const o of ops) {
+      const s = tx.objectStore(o.store);
+      if (o.op === 'clear') s.clear();
+      else if (o.op === 'delete') s.delete(o.key);
+      else s.put(o.value, o.key);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error('aborted'));
+  });
+}
+
+export const ALL_STORES: readonly StoreName[] = STORES;
+
 /** Ask the browser not to evict our data under storage pressure. Best effort. */
 export async function requestPersistence(): Promise<void> {
   try {

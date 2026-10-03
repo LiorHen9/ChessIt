@@ -4,18 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#2f4f3a" />
-    <meta name="description" content="לומדים שחמט ביחד – לילדים ולמבוגרים" />
+    <meta name="description" content="משחק ולימוד שחמט בעברית לכל המשפחה: מסלול מגיל 5, חידות, משחק נגד המחשב ומשחק בין שני טלפונים. בלי פרסומות ובלי הרשמה." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="ChessIt" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap"
-    />
-    <title>ChessIt</title>
+    <!-- The Hebrew font is in the repo (public/fonts, SIL OFL): nothing is loaded from Google. -->
+    <link rel="preload" href="/fonts/rubik.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Link preview (WhatsApp, Telegram, Facebook…). Absolute addresses: previews do not resolve relative ones. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="he_IL" />
+    <meta property="og:site_name" content="ChessIt" />
+    <meta property="og:title" content="ChessIt – לומדים שחמט ביחד" />
+    <meta property="og:description" content="משחק ולימוד שחמט בעברית לכל המשפחה: מסלול מגיל 5, חידות, משחק נגד המחשב ומשחק בין שני טלפונים. בלי פרסומות ובלי הרשמה." />
+    <meta property="og:url" content="https://liorhen9.github.io/ChessIt/" />
+    <meta property="og:image" content="https://liorhen9.github.io/ChessIt/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="לוח שחמט וכלים, עם הכיתוב: ChessIt – לומדים שחמט ביחד" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>ChessIt – לומדים שחמט ביחד</title>
   </head>
   <body>
     <div id="app"></div>

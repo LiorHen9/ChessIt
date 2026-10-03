@@ -2,6 +2,7 @@
 // load stays small. The Service Worker still precaches every chunk, so they work offline.
 import type { ComponentType } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
+import { logError } from './errorLog';
 
 export function lazy<P extends object>(load: () => Promise<ComponentType<P>>): ComponentType<P> {
   let Loaded: ComponentType<P> | null = null;
@@ -24,6 +25,7 @@ export function lazy<P extends object>(load: () => Promise<ComponentType<P>>): C
         () => alive && setReady(true),
         (e) => {
           console.error('[lazy] failed to load a screen', e);
+          logError(e, 'lazy screen');
           pending = null;
           if (alive) setFailed(true);
         }

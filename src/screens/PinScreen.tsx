@@ -2,7 +2,8 @@
 // "Forgot" asks a question for a parent; the right answer removes the PIN.
 import { useState } from 'preact/hooks';
 import { PinPad } from '../components/PinPad';
-import { checkPin, parentQuestion, withoutPin } from '../profiles/pin';
+import { checkPin, withoutPin } from '../profiles/pin';
+import { ParentCheck } from '../components/ParentCheck';
 import { byGender, saveProfile, type Profile } from '../profiles/profiles';
 
 interface Props {
@@ -14,23 +15,6 @@ interface Props {
 
 export function PinScreen({ profile, onPass, onCancel }: Props) {
   const [forgot, setForgot] = useState(false);
-  const [question, setQuestion] = useState(() => parentQuestion());
-  const [answer, setAnswer] = useState('');
-  const [wrongAnswer, setWrongAnswer] = useState(false);
-
-  async function reset(e: Event) {
-    e.preventDefault();
-    if (Number(answer.trim()) !== question.answer) {
-      setWrongAnswer(true);
-      setAnswer('');
-      setQuestion(parentQuestion());
-      return;
-    }
-    const p = withoutPin(profile);
-    await saveProfile(p);
-    onPass(p, true);
-  }
-
   return (
     <main class="screen pin-screen">
       <header class="topbar">
@@ -63,35 +47,16 @@ export function PinScreen({ profile, onPass, onCancel }: Props) {
           </button>
         </>
       ) : (
-        <form class="card parent-check" onSubmit={reset}>
-          <p class="parent-title">שאלה להורה</p>
-          <p>
-            פתרון נכון מוחק את ה-PIN, ואפשר להגדיר חדש בהגדרות. כמה זה{' '}
-            <bdi dir="ltr" class="parent-q">
-              {question.text}
-            </bdi>
-            ?
-          </p>
-          <input
-            class="input"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            dir="ltr"
-            autoComplete="off"
-            aria-label="התשובה"
-            value={answer}
-            onInput={(e) => setAnswer((e.target as HTMLInputElement).value)}
-          />
-          {wrongAnswer && <p class="parent-wrong">לא נכון. הנה תרגיל אחר.</p>}
-          <div class="row">
-            <button class="btn btn-primary" type="submit" disabled={!answer.trim()}>
-              אישור
-            </button>
-            <button class="btn btn-secondary" type="button" onClick={() => setForgot(false)}>
-              ביטול
-            </button>
-          </div>
-        </form>
+        <ParentCheck
+          onCancel={() => setForgot(false)}
+          onPass={async () => {
+            const p = withoutPin(profile);
+            await saveProfile(p);
+            onPass(p, true);
+          }}
+        >
+          פתרון נכון מוחק את ה-PIN, ואפשר להגדיר חדש בהגדרות.
+        </ParentCheck>
       )}
     </main>
   );

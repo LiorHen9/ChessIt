@@ -20,11 +20,13 @@ interface Props {
   onSave: (p: Profile) => void;
   onDelete: (p: Profile) => void;
   onCancel: () => void;
+  /** First run (no profiles yet): restore from a backup file instead. */
+  onRestore?: () => void;
 }
 
 const MAX_NAME = 16;
 
-export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }: Props) {
+export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel, onRestore }: Props) {
   const [name, setName] = useState(profile?.name ?? '');
   const [avatar, setAvatar] = useState(profile?.avatar ?? AVATARS[Math.floor(Math.random() * AVATARS.length)]);
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(profile?.ageGroup ?? null);
@@ -76,6 +78,12 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel }
         <span class="topbar-title">{profile ? 'עריכת פרופיל' : 'פרופיל חדש'}</span>
         <span />
       </header>
+
+      {!profile && !canCancel && onRestore && (
+        <button type="button" class="btn btn-ghost restore-link" data-testid="editor-restore" onClick={onRestore}>
+          📥 יש לך גיבוי מטלפון אחר? שחזור מקובץ
+        </button>
+      )}
 
       <form class="form" onSubmit={save}>
         <div class="avatar-preview" aria-hidden="true">

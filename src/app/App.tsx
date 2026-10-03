@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import {
   deleteProfile,
   getProgress,
@@ -31,6 +31,8 @@ import { activateSettings } from '../profiles/settings';
 import { hasPin } from '../profiles/pin';
 import { stopSpeaking } from '../audio/speech';
 import { lazy } from './lazy';
+import { logError } from './errorLog';
+import { completedStations, dismissNudge, loadBackupState, shouldNudge, type BackupState } from '../storage/backupState';
 import { clearRoomFromUrl, loadOpenRoom, roomFromUrl, type OpenRoom } from '../net/openRoom';
 import type { RoomStart } from '../screens/RoomScreen';
 
@@ -46,6 +48,13 @@ const PlacementTest = lazy(() => import('../screens/PlacementTest').then((m) => 
 const SettingsScreen = lazy(() => import('../screens/SettingsScreen').then((m) => m.SettingsScreen));
 // Rooms (screens, relay, QR): one chunk, loaded only when someone opens a room.
 const RoomScreen = lazy(() => import('../screens/RoomScreen').then((m) => m.RoomScreen));
+// Backup and About: used rarely, each its own chunk.
+const BackupScreen = lazy(() => import('../screens/BackupScreen').then((m) => m.BackupScreen));
+const AboutScreen = lazy(() => import('../screens/AboutScreen').then((m) => m.AboutScreen));
+
+/** Where the family screens (backup, about) go back to. */
+type FamilyBack = 'settings' | 'profiles' | 'first';
+const BACK_LABEL: Record<FamilyBack, string> = { settings: 'להגדרות', profiles: 'חזרה', first: 'חזרה' };
 
 type Screen =
   | { name: 'loading' }
@@ -64,7 +73,9 @@ type Screen =
   | { name: 'puzzle'; mode: PuzzleMode; back: 'home' | 'puzzles' | 'map' | 'review' }
   | { name: 'review' }
   | { name: 'placement'; back: 'home' | 'map' }
-  | { name: 'room'; start: RoomStart };
+  | { name: 'room'; start: RoomStart }
+  | { name: 'backup'; back: FamilyBack }
+  | { name: 'about'; back: FamilyBack; focus?: 'report' };
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'loading' });
@@ -73,6 +84,7 @@ export function App() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [saved, setSaved] = useState<SavedGame | undefined>(undefined);
   const [openRoom, setOpenRoom] = useState<OpenRoom | undefined>(undefined);
+  const [backupState, setBackupState] = useState<BackupState | null>(null);
   /** A room code from a shared link or QR (?room=), handled once a profile is chosen. */
   const pendingRoom = useRef<string | null>(null);
 
@@ -87,7 +99,10 @@ export function App() {
     void requestPersistence();
     void (async () => {
       // The learning content is a separate download (lazy chunk); load it before the first screen.
-      await loadContent().catch((e) => console.error('[content] failed to load', e));
+      await loadContent().catch((e) => {
+        console.error('[content] failed to load', e);
+        logError(e, 'content');
+      });
       const list = await refresh();
       pendingRoom.current = roomFromUrl();
       clearRoomFromUrl();
@@ -105,7 +120,9 @@ export function App() {
   }, []);
 
   // Shared screens (choosing a profile) use the default theme; a profile's own screens use its theme.
-  useEffect(() => {
+  // A layout effect, so it runs as the screen appears: a deferred effect could run after a quick
+  // PIN had already entered the profile, and paint over the profile's own theme.
+  useLayoutEffect(() => {
     // (The profile editor applies the theme being chosen itself, as a live preview.)
     if (screen.name === 'profiles' || screen.name === 'pin') void applyTheme('clean');
   }, [screen.name]);
@@ -127,6 +144,7 @@ export function App() {
     setSaved(await loadSavedGame());
     const room = await loadOpenRoom(p.id);
     setOpenRoom(room);
+    setBackupState(await loadBackupState());
     const code = pendingRoom.current;
     pendingRoom.current = null;
     if (code) setScreen({ name: 'room', start: room?.code === code ? { kind: 'resume' } : { kind: 'join', code } });
@@ -190,6 +208,20 @@ export function App() {
     });
   }
 
+  function familyBack(back: FamilyBack) {
+    if (back === 'settings' && active) setScreen({ name: 'settings' });
+    else setScreen(profiles.length === 0 ? { name: 'edit' } : { name: 'profiles' });
+  }
+
+  /** After a restore: everyone picks their profile again (the active one may have changed). */
+  async function afterRestore() {
+    setActive(null);
+    setProgress(null);
+    await activateSettings(null);
+    const list = await refresh();
+    setScreen(list.length === 0 ? { name: 'edit' } : { name: 'profiles' });
+  }
+
   async function backHome() {
     if (active) await enterHome(active);
     else setScreen({ name: 'profiles' });
@@ -214,6 +246,8 @@ export function App() {
             onPick={(p) => openProfile(p, 'home')}
             onCreate={() => setScreen({ name: 'edit' })}
             onEdit={(p) => openProfile(p, 'edit')}
+            onBackup={() => setScreen({ name: 'backup', back: 'profiles' })}
+            onAbout={() => setScreen({ name: 'about', back: 'profiles' })}
           />
         );
 
@@ -240,6 +274,22 @@ export function App() {
             onBack={() => setScreen({ name: 'home' })}
             onProfile={(p) => void profileChanged(p)}
             onEdit={() => setScreen({ name: 'edit', profile: active!, back: 'settings' })}
+            onBackup={() => setScreen({ name: 'backup', back: 'settings' })}
+            onAbout={(focus) => setScreen({ name: 'about', back: 'settings', focus })}
+          />
+        );
+
+      case 'backup':
+        return <BackupScreen backLabel={BACK_LABEL[screen.back]} onBack={() => familyBack(screen.back)} onRestored={() => void afterRestore()} />;
+
+      case 'about':
+        return (
+          <AboutScreen
+            backLabel={BACK_LABEL[screen.back]}
+            focus={screen.focus}
+            onBack={() => familyBack(screen.back)}
+            // Start over from a clean slate: every module that keeps state in memory forgets it too.
+            onDeleted={() => location.reload()}
           />
         );
 
@@ -249,6 +299,7 @@ export function App() {
             key={screen.profile?.id ?? 'new'}
             profile={screen.profile}
             canCancel={profiles.length > 0}
+            onRestore={() => setScreen({ name: 'backup', back: 'first' })}
             onSave={(p) => void handleSave(p)}
             onDelete={(p) => void handleDelete(p)}
             onCancel={() => {
@@ -280,6 +331,12 @@ export function App() {
             onPlacement={() => setScreen({ name: 'placement', back: 'home' })}
             onSettings={() => setScreen({ name: 'settings' })}
             onProfile={(p) => void profileChanged(p)}
+            backupNudge={shouldNudge(backupState, completedStations(progress))}
+            onBackup={() => setScreen({ name: 'backup', back: 'settings' })}
+            onDismissNudge={() => {
+              void dismissNudge();
+              setBackupState({ ...backupState, nudgeDismissed: true });
+            }}
           />
         );
 

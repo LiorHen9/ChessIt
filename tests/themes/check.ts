@@ -45,7 +45,12 @@ const PAIRS: [string, string, number, string][] = [
   ['pc-bf', 'sq-dark', 2.4, 'black pieces on dark squares'],
   ['pc-bf', 'sq-light', 4.5, 'black pieces on light squares'],
   ['pc-wf', 'pc-bf', 7, 'white vs black pieces'],
-  ['qr-ink', 'qr-paper', 15, 'QR code (cameras need dark on light)']
+  ['qr-ink', 'qr-paper', 15, 'QR code (cameras need dark on light)'],
+  ['good', 'surface', 4.5, '"good" feedback text on cards'],
+  ['good', 'bg', 4.5, '"good" feedback text on the page'],
+  ['danger', 'surface', 4.5, 'red text (delete, wrong) on cards'],
+  ['danger', 'bg', 4.5, 'red text on the page'],
+  ['danger-ink', 'danger', 4.5, 'text on red buttons']
 ];
 
 for (const t of themes) {

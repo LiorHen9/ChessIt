@@ -45,6 +45,8 @@ export function RoomGame({ client, profile, onExit, onProgress }: Props) {
   const [message, setMessage] = useState<Message | null>(null);
   const [confirm, setConfirm] = useState<'resign' | 'leave' | null>(null);
   const [bubbles, setBubbles] = useState<Partial<Record<Seat, { emoji: string; key: number }>>>({});
+  /** The last reaction in words, for screen readers (the bubble itself comes and goes). */
+  const [heard, setHeard] = useState('');
   const lastReaction = useRef(0);
   const msgId = useRef(0);
   const [, tick] = useState(0);
@@ -55,6 +57,7 @@ export function RoomGame({ client, profile, onExit, onProgress }: Props) {
       if (m.type === 'reaction') {
         const key = Date.now();
         setBubbles((b) => ({ ...b, [m.from]: { emoji: reactionInfo(m.id).emoji, key } }));
+        setHeard(reactionInfo(m.id).label);
         window.setTimeout(() => setBubbles((b) => (b[m.from]?.key === key ? { ...b, [m.from]: undefined } : b)), BUBBLE_MS);
       }
     });
@@ -222,7 +225,7 @@ export function RoomGame({ client, profile, onExit, onProgress }: Props) {
           </span>
         )}
         {bubble && (
-          <span class="reaction-bubble" key={bubble.key} aria-live="polite" data-testid={`bubble-${isMe ? 'me' : 'them'}`}>
+          <span class="reaction-bubble" key={bubble.key} aria-hidden="true" data-testid={`bubble-${isMe ? 'me' : 'them'}`}>
             {bubble.emoji}
           </span>
         )}
@@ -267,6 +270,9 @@ export function RoomGame({ client, profile, onExit, onProgress }: Props) {
       </p>
 
       {message && <Feedback message={message} />}
+      <p class="visually-hidden" aria-live="polite">
+        {heard}
+      </p>
       {outcome && outcome.winner === myColor && <Confetti />}
 
       {!client.gone && !outcome && (
