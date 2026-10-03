@@ -6,7 +6,7 @@
 // and the list of rooms cannot be read at all.
 //
 // Empty = rooms are not set up yet; the home card explains that, and the rest of the app works.
-export const FIREBASE_DB_URL = '';
+export const FIREBASE_DB_URL = 'https://chessit-6d389-default-rtdb.europe-west1.firebasedatabase.app';
 
 /** A Realtime Database address: https://<name>.firebaseio.com or https://<name>.<region>.firebasedatabase.app */
 export const DB_URL_PATTERN = /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.(firebaseio\.com|firebasedatabase\.app)$/;
