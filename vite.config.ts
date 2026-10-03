@@ -23,9 +23,11 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png'],
       manifest: {
-        name: 'ChessIt',
+        id: '.',
+        name: 'ChessIt – לומדים שחמט ביחד',
         short_name: 'ChessIt',
-        description: 'לומדים שחמט ביחד – לילדים ולמבוגרים',
+        description: 'משחק ולימוד שחמט בעברית לכל המשפחה: מסלול מגיל 5, חידות, משחק נגד המחשב ומשחק בין שני טלפונים.',
+        categories: ['education', 'games', 'kids'],
         lang: 'he',
         dir: 'rtl',
         start_url: '.',

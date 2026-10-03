@@ -363,7 +363,14 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
               ))}
             </ul>
             <p class="settings-note">
-              ובמקומם יבואו <bdi dir="ltr">{backup.profiles.length}</bdi> הפרופילים מהגיבוי. גם משחק פתוח וחדר פתוח של פרופילים שנמחקים ייסגרו.
+              {backup.profiles.length === 1 ? (
+                'ובמקומם יבוא הפרופיל מהגיבוי.'
+              ) : (
+                <>
+                  ובמקומם יבואו <bdi dir="ltr">{backup.profiles.length}</bdi> הפרופילים מהגיבוי.
+                </>
+              )}{' '}
+              גם משחק פתוח וחדר פתוח של פרופילים שנמחקים ייסגרו.
             </p>
           </section>
           <ParentCheck danger confirmLabel="להחליף הכול" onCancel={() => setView({ name: 'preview', backup, file: '' })} onPass={() => restore(backup, 'replace')}>

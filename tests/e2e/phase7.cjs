@@ -348,7 +348,7 @@ const parentAnswer = async (p) => {
   await q.waitForSelector('[data-testid="report-text"]');
   await q.waitForFunction(() => document.querySelector('[data-testid="report-text"]').textContent.includes('phase7 boom'));
   const report = await q.textContent('[data-testid="report-text"]');
-  expect(report.includes('ChessIt 0.9.0') && report.includes('מכשיר:') && report.includes('שגיאות אחרונות (1)'), 'report: version, device, errors');
+  expect(report.includes('ChessIt 0.9.0') && report.includes('Device:') && report.includes('Recent errors (1)'), 'report: version, device, errors');
   expect(!report.includes('סבתא'), 'report has no names');
   await ctxB.grantPermissions(['clipboard-read', 'clipboard-write']);
   await q.click('[data-report="copy"]');

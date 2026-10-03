@@ -43,24 +43,27 @@ function standalone(): boolean {
 
 /** The details for a problem report: the app and the phone, and recent errors. No names. */
 export async function reportText(errors: ErrorEntry[], profiles: number): Promise<string> {
+  // Labels in English: the text is pasted into messages and GitHub issues, and Hebrew mixed into
+  // left-to-right lines comes out scrambled.
   let persisted = '?';
   try {
-    persisted = (await navigator.storage?.persisted?.()) ? 'כן' : 'לא';
+    persisted = (await navigator.storage?.persisted?.()) ? 'yes' : 'no';
   } catch {
     // unknown
   }
+  const yn = (b: boolean) => (b ? 'yes' : 'no');
   const lines = [
-    `ChessIt ${APP_VERSION}${COMMIT ? ` (${COMMIT})` : ''}${BUILD_TIME ? `, נבנה ${BUILD_TIME.slice(0, 16).replace('T', ' ')}` : ''}`,
-    `זמן: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
-    `מכשיר: ${navigator.userAgent}`,
-    `מסך: ${screen.width}×${screen.height}, חלון ${innerWidth}×${innerHeight}, צפיפות ${devicePixelRatio}`,
-    `מותקנת למסך הבית: ${standalone() ? 'כן' : 'לא'} · אינטרנט: ${navigator.onLine ? 'כן' : 'לא'} · אחסון קבוע: ${persisted}`,
-    `שפה: ${navigator.language} · מצב כהה: ${matchMedia('(prefers-color-scheme: dark)').matches ? 'כן' : 'לא'} · קול עברי: ${hasHebrewVoice() ? 'כן' : 'לא'}`,
-    `פרופילים: ${profiles} · ערכה: ${document.documentElement.dataset.theme ?? 'clean'}`,
-    errors.length ? `שגיאות אחרונות (${errors.length}):` : 'שגיאות אחרונות: אין'
+    `ChessIt ${APP_VERSION}${COMMIT ? ` (${COMMIT})` : ''}${BUILD_TIME ? `, built ${BUILD_TIME.slice(0, 16).replace('T', ' ')}` : ''}`,
+    `Now: ${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`,
+    `Device: ${navigator.userAgent}`,
+    `Screen: ${screen.width}x${screen.height}, window ${innerWidth}x${innerHeight}, DPR ${devicePixelRatio}`,
+    `Installed: ${yn(standalone())} · Online: ${yn(navigator.onLine)} · Persistent storage: ${persisted}`,
+    `Language: ${navigator.language} · Dark mode: ${yn(matchMedia('(prefers-color-scheme: dark)').matches)} · Hebrew voice: ${yn(hasHebrewVoice())}`,
+    `Profiles: ${profiles} · Theme: ${document.documentElement.dataset.theme ?? 'clean'}`,
+    errors.length ? `Recent errors (${errors.length}):` : 'Recent errors: none'
   ];
   for (const e of errors.slice(-10).reverse()) {
-    lines.push(`- ${new Date(e.at).toISOString().slice(5, 16).replace('T', ' ')} ${e.message}${e.where ? ` @ ${e.where}` : ''}${e.count > 1 ? ` ×${e.count}` : ''}`);
+    lines.push(`- ${new Date(e.at).toISOString().slice(5, 16).replace('T', ' ')} ${e.message}${e.where ? ` @ ${e.where}` : ''}${e.count > 1 ? ` x${e.count}` : ''}`);
   }
   return lines.join('\n');
 }
@@ -152,7 +155,7 @@ export function AboutScreen({ backLabel, onBack, focus, onDeleted }: Props) {
             <strong>הכול נשמר רק בטלפון הזה:</strong> פרופילים, כוכבים, משחקים והגדרות. אין הרשמה, אין חשבון ואין שרת שאוסף נתונים.
           </li>
           <li>
-            <strong>בחדר לשני טלפונים</strong> עוברים רק השם, הדמות, המין (כדי לפנות נכון בעברית), המסעים וסמלי הרגש. בלי צ׳אט ובלי מיקום. החדר נמחק כששני השחקנים יוצאים, ובכל מקרה אחרי שעתיים בלי שימוש.
+            <strong>בחדר לשני טלפונים</strong> עוברים רק השם, הדמות, המין (כדי לפנות נכון בעברית), המסעים וסמלי הרגש. בלי צ׳אט ובלי מיקום. החדר נמחק כששני השחקנים יוצאים, וחדר שננטש נמחק בניקוי אוטומטי.
           </li>
           <li>
             <strong>בלי פרסומות, בלי מעקב ובלי אנליטיקס.</strong> האפליקציה לא שולחת לאף אחד מה עושים בה.
