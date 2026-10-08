@@ -33,7 +33,7 @@ export interface ThemeInfo {
 export const THEMES: ThemeInfo[] = [
   { id: 'hangingPiece', title: 'כלי לא שמור', icon: '🎁', part: 3, about: 'מוצאים כלי שאפשר לאכול בחינם' },
   { id: 'mateIn1', title: 'מט במסע אחד', icon: '👑', part: 5, about: 'מסע אחד – והמלך לא יכול לברוח' },
-  { id: 'backRankMate', title: 'מט בשורה האחרונה', icon: '🧱', part: 5, about: 'המלך כלוא מאחורי הרגלים שלו' },
+  { id: 'backRankMate', title: 'מט בשורה האחרונה', icon: '🧱', part: 5, about: 'המלך כלוא מאחורי החיילים שלו' },
   { id: 'mateIn2', title: 'מט בשני מסעים', icon: '👑👑', part: 5, about: 'שני מסעים, והיריב לא יכול להינצל' },
   { id: 'fork', title: 'מזלג', icon: '🍴', part: 7, about: 'כלי אחד תוקף שני כלים בבת אחת' },
   { id: 'pin', title: 'סיכה', icon: '📌', part: 7, about: 'הכלי של היריב לא יכול לזוז' },

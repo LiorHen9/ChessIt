@@ -17,7 +17,7 @@ export const PIECE_NAME: Record<PieceSymbol, string> = {
   r: 'צריח',
   b: 'רץ',
   n: 'פרש',
-  p: 'רגלי'
+  p: 'חייל'
 };
 
 export const PIECE_VALUE: Record<PieceSymbol, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
@@ -68,7 +68,7 @@ export const END_REASON_TEXT: Record<EndReason, string> = {
   stalemate: 'פט – למלך אין לאן לזוז, אבל הוא לא בשח. תיקו.',
   insufficient: 'לא נשארו מספיק כלים כדי לתת מט. תיקו.',
   threefold: 'אותה עמדה חזרה שלוש פעמים. תיקו.',
-  fifty: '50 מסעים בלי הכאה ובלי מסע רגלי. תיקו.',
+  fifty: '50 מסעים בלי הכאה ובלי מסע חייל. תיקו.',
   resign: 'כניעה'
 };
 

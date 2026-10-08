@@ -530,7 +530,7 @@ export function Board({
 
       {promotion && (
         <div class="promo" dir="rtl" role="dialog" aria-label="בחירת כלי להכתרה">
-          <p class="promo-title">הרגלי הגיע לקצה! למה להפוך אותו?</p>
+          <p class="promo-title">החייל הגיע לקצה! למה להפוך אותו?</p>
           <div class="promo-options">
             {(['q', 'r', 'b', 'n'] as PieceSymbol[]).map((t) => (
               <button key={t} class="promo-btn" onClick={() => choosePromotion(t)}>

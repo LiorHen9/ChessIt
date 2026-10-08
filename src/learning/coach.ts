@@ -134,7 +134,7 @@ export function judgeMove(before: Chess, m: Move, history: Move[]): CoachNote {
   if (opening) {
     if (m.san.startsWith('O-O')) return { tone: 'good', text: 'הצרחה! המלך במקום בטוח, והצריח יוצא למשחק. 🏰' };
     if (m.piece === 'k') return { tone: 'bad', text: 'בפתיחה עדיף לא להזיז את המלך – עדיף להצריח.' };
-    if (m.piece === 'p' && CENTER.includes(m.to)) return { tone: 'good', text: 'יפה! רגלי למרכז. 🎯' };
+    if (m.piece === 'p' && CENTER.includes(m.to)) return { tone: 'good', text: 'יפה! חייל למרכז. 🎯' };
     if ((m.piece === 'n' || m.piece === 'b') && m.from[1] === BACK_RANK[me]) {
       if (m.piece === 'n' && ['a', 'h'].includes(m.to[0])) return { tone: 'ok', text: 'פרש בצד רואה פחות משבצות. עדיף לכיוון המרכז.' };
       return { tone: 'good', text: `יפה! ה${PIECE_NAME[m.piece]} יצא לשחק. 🐴` };
@@ -144,7 +144,7 @@ export function judgeMove(before: Chess, m: Move, history: Move[]): CoachNote {
     const movedBefore = history.some((h) => h.color === me && h.to === m.from);
     if (movedBefore && m.piece !== 'p' && undeveloped(before, me) >= 2)
       return { tone: 'ok', text: 'הכלי הזה כבר זז. בפתיחה עדיף להוציא כלי חדש.' };
-    if (m.piece === 'p' && ['a', 'h'].includes(m.to[0])) return { tone: 'ok', text: 'רגלי בצד לא עוזר הרבה. עדיף לשלוט במרכז.' };
+    if (m.piece === 'p' && ['a', 'h'].includes(m.to[0])) return { tone: 'ok', text: 'חייל בצד לא עוזר הרבה. עדיף לשלוט במרכז.' };
   }
   return { tone: 'ok', text: '' };
 }

@@ -8,7 +8,7 @@ const RULE: Record<string, string> = {
   q: 'המלכה זזה ישר או באלכסון.',
   k: 'המלך זז רק צעד אחד.',
   n: 'הפרש זז רק בצורת L: שתיים ישר ואחת הצידה.',
-  p: 'הרגלי זז רק קדימה, ואוכל רק באלכסון.'
+  p: 'החייל זז רק קדימה, ואוכל רק באלכסון.'
 };
 
 export function illegalReason(pieces: Pieces, from: Square, to: Square): string {
@@ -27,10 +27,10 @@ export function illegalReason(pieces: Pieces, from: Square, to: Square): string 
 
   if (piece.type === 'p') {
     const forward = piece.color === 'w' ? 1 : -1;
-    if (df === 0 && dr === forward && there) return 'הרגלי לא אוכל ישר – רק באלכסון.';
-    if (df === 0 && dr === 2 * forward) return 'צעד כפול מותר רק במסע הראשון של הרגלי, ורק כשהדרך פנויה.';
-    if (Math.abs(df) === 1 && dr === forward && !there) return 'באלכסון הרגלי זז רק כשהוא אוכל כלי.';
-    if (dr * forward < 0) return 'הרגלי אף פעם לא זז אחורה.';
+    if (df === 0 && dr === forward && there) return 'החייל לא אוכל ישר – רק באלכסון.';
+    if (df === 0 && dr === 2 * forward) return 'צעד כפול מותר רק במסע הראשון של החייל, ורק כשהדרך פנויה.';
+    if (Math.abs(df) === 1 && dr === forward && !there) return 'באלכסון החייל זז רק כשהוא אוכל כלי.';
+    if (dr * forward < 0) return 'החייל אף פעם לא זז אחורה.';
   }
   return RULE[piece.type];
 }

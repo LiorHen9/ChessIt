@@ -213,13 +213,13 @@ export function explainGood(r: ReviewedMove, fallback: boolean, age: AgeGroup): 
   if (age === 'kids5_7') {
     if (mate) return { title, text: 'מט! ניצחת! 🎉' };
     if (m.captured) return { title, text: `כאן אכלת את ${the(m.captured)}! כל הכבוד!` };
-    if (m.promotion) return { title, text: `הרגלי שלך הפך ל${PIECE_NAME[m.promotion]}!` };
+    if (m.promotion) return { title, text: `החייל שלך הפך ל${PIECE_NAME[m.promotion]}!` };
     return { title, text: isBest ? 'מסע מצוין! בדיוק מה שהמחשב היה עושה.' : 'מסע חכם!' };
   }
   if (age === 'kids8_12') {
     if (mate) return { title, text: 'מט! למלך של היריב כבר אין לאן לברוח.' };
     if (m.captured) return { title, text: `אכלת את ${the(m.captured)} של היריב. ${isBest ? 'זה גם המסע שהמחשב היה בוחר!' : 'יופי של מסע!'}` };
-    if (m.promotion) return { title, text: `הבאת רגלי עד הסוף והוא הפך ל${PIECE_NAME[m.promotion]}.` };
+    if (m.promotion) return { title, text: `הבאת חייל עד הסוף והוא הפך ל${PIECE_NAME[m.promotion]}.` };
     return { title, text: isBest ? `${describeMove(m)}: בדיוק המסע שהמחשב היה בוחר.` : `${describeMove(m)}: מסע טוב ששומר על העמדה.` };
   }
   const detail = `הערכה אחרי המסע: ${ltr(pawns(r.after))}`;

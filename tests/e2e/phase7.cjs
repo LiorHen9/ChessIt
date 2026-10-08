@@ -560,7 +560,7 @@ const parentAnswer = async (p) => {
     }
   };
   await goTo('e2');
-  expect((await r.textContent('[data-testid="board-cursor"]')).includes('רגלי לבן'), 'cursor reads the piece');
+  expect((await r.textContent('[data-testid="board-cursor"]')).includes('חייל לבן'), 'cursor reads the piece');
   await r.keyboard.press('Enter');
   await goTo('e4');
   expect((await r.textContent('[data-testid="board-cursor"]')).includes('אפשר לזוז לכאן'), 'cursor says the move is possible');
