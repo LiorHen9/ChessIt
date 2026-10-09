@@ -411,6 +411,15 @@ const parentAnswer = async (p) => {
       await r.setInputFiles('[data-testid="backup-file"]', path.join(TMP, 'newer.json'));
       await r.waitForSelector('[data-view="preview"]');
     }],
+    ['backup paste', async () => {
+      await r.click('.btn-back');
+      await r.waitForSelector('[data-view="main"]');
+      await r.click('[data-backup="paste"]');
+      await r.fill('[data-testid="backup-paste-box"]', 'not a backup');
+      await r.click('[data-backup="paste-check"]');
+      await r.waitForSelector('[data-testid="backup-note"]');
+      await r.waitForTimeout(400);
+    }],
     ['picker', async () => {
       await r.goto(URL);
       await r.waitForSelector('.home-head');
@@ -476,6 +485,18 @@ const parentAnswer = async (p) => {
       await r.click('[data-testid="room-open"]');
       await r.waitForSelector('[data-testid="room-qr"]');
       await r.waitForTimeout(600);
+    }],
+    // iPhone/iPad browser tab (?browser-notice=1 stands in for it on localhost).
+    ['browser notice', async () => {
+      await r.evaluate(() => sessionStorage.clear());
+      await r.goto(URL + '&browser-notice=1');
+      await r.waitForSelector('[data-testid="browser-notice"]');
+    }],
+    ['browser banner', async () => {
+      await r.click('[data-testid="browser-continue"]');
+      await r.waitForSelector('.home-head');
+      await r.click('.who');
+      await r.waitForSelector('[data-testid="browser-banner"]');
     }]
   ];
   for (const s of ['light', 'dark']) {

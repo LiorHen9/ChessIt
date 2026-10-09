@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { ThemePicker } from '../components/ThemePicker';
+import { BrowserBanner } from '../components/BrowserNotice';
 import { applyTheme, CLEAN, loadTheme, suggestTheme, type Theme } from '../themes/index';
 import {
   AGE_GROUPS,
@@ -79,9 +80,11 @@ export function ProfileEditor({ profile, canCancel, onSave, onDelete, onCancel, 
         <span />
       </header>
 
+      {!profile && <BrowserBanner what="הפרופיל" />}
+
       {!profile && !canCancel && onRestore && (
         <button type="button" class="btn btn-ghost restore-link" data-testid="editor-restore" onClick={onRestore}>
-          📥 יש לך גיבוי מטלפון אחר? שחזור מקובץ
+          📥 יש לך גיבוי? שחזור מקובץ או מטקסט
         </button>
       )}
 

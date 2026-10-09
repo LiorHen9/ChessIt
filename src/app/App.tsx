@@ -31,6 +31,8 @@ import { activateSettings } from '../profiles/settings';
 import { hasPin } from '../profiles/pin';
 import { stopSpeaking } from '../audio/speech';
 import { lazy } from './lazy';
+import { acceptBrowser, browserAccepted, inIosBrowser } from './install';
+import { BrowserNotice } from '../components/BrowserNotice';
 import { logError } from './errorLog';
 import { completedStations, dismissNudge, loadBackupState, shouldNudge, type BackupState } from '../storage/backupState';
 import { clearRoomFromUrl, loadOpenRoom, roomFromUrl, type OpenRoom } from '../net/openRoom';
@@ -85,6 +87,8 @@ export function App() {
   const [saved, setSaved] = useState<SavedGame | undefined>(undefined);
   const [openRoom, setOpenRoom] = useState<OpenRoom | undefined>(undefined);
   const [backupState, setBackupState] = useState<BackupState | null>(null);
+  // iPhone/iPad browser tab: first explain that the home-screen app keeps its own data (app/install.ts).
+  const [browserOk, setBrowserOk] = useState(() => !inIosBrowser() || browserAccepted());
   /** A room code from a shared link or QR (?room=), handled once a profile is chosen. */
   const pendingRoom = useRef<string | null>(null);
 
@@ -230,7 +234,16 @@ export function App() {
   return (
     <>
       <PieceSprite />
-      {renderScreen()}
+      {browserOk || screen.name === 'loading' ? (
+        renderScreen()
+      ) : (
+        <BrowserNotice
+          onContinue={() => {
+            acceptBrowser();
+            setBrowserOk(true);
+          }}
+        />
+      )}
     </>
   );
 

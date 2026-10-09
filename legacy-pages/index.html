@@ -118,6 +118,29 @@
       .path { background: var(--step); border-radius: 8px; padding: 1px 6px; white-space: nowrap; }
       .url { direction: ltr; unicode-bidi: isolate; word-break: break-all; font-size: 0.95rem; }
       .ltr { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+      ul.how { margin: 0; padding-inline-start: 1.2em; }
+      ul.how li { margin-bottom: 4px; }
+      .warn {
+        margin: 12px 0 0;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 2px solid var(--accent);
+        font-size: 0.95rem;
+      }
+      .copy-box {
+        width: 100%;
+        min-height: 7.5em;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 12px;
+        border: 1.5px solid var(--line);
+        background: var(--bg);
+        color: var(--ink);
+        direction: ltr;
+        text-align: left;
+        font: 16px/1.4 ui-monospace, Menlo, Consolas, monospace;
+        word-break: break-all;
+      }
       [hidden] { display: none !important; }
       footer { text-align: center; color: var(--ink-soft); font-size: 0.85rem; margin-top: 22px; }
     </style>
@@ -138,26 +161,29 @@
         <div id="save-buttons" hidden>
           <button type="button" class="btn btn-primary" id="btn-share" hidden>💾 שמירת קובץ הגיבוי</button>
           <button type="button" class="btn" id="btn-download">⬇️ הורדת קובץ הגיבוי</button>
+          <button type="button" class="btn btn-secondary" id="btn-copy">📋 העתקת הגיבוי כטקסט</button>
+          <textarea id="copy-box" class="copy-box" readonly aria-label="הגיבוי כטקסט" hidden></textarea>
         </div>
         <p id="note" class="note" role="status" aria-live="polite"></p>
       </section>
 
       <section class="card" aria-labelledby="h-new">
-        <h2 id="h-new"><span class="num" aria-hidden="true">2</span>פותחים את הכתובת החדשה</h2>
+        <h2 id="h-new"><span class="num" aria-hidden="true">2</span>מתקינים את הכתובת החדשה למסך הבית</h2>
         <p class="url">https://chessit-6d389.web.app/</p>
-        <a class="btn btn-primary" id="go" href="https://chessit-6d389.web.app/">♟️ מעבר ל-ChessIt החדש</a>
-        <p class="muted" style="margin-top: 12px">
-          כדאי להתקין אותו מחדש למסך הבית –
-          באנדרואיד: ב-Chrome ← <span class="ltr">⋮</span> ← "התקנת האפליקציה".
-          באייפון: ב-Safari ← כפתור השיתוף ← "הוספה למסך הבית".
-        </p>
+        <a class="btn btn-primary" id="go" href="https://chessit-6d389.web.app/">♟️ פתיחת ChessIt החדש</a>
+        <ul class="how" style="margin-top: 12px">
+          <li><b>אייפון:</b> ב-Safari ← כפתור השיתוף ← "הוספה למסך הבית" ← "הוסף".</li>
+          <li><b>אנדרואיד:</b> ב-Chrome ← <span class="ltr">⋮</span> ← "התקנת האפליקציה".</li>
+        </ul>
+        <p class="warn">⚠️ <b>באייפון:</b> מה ששומרים ב-Safari לא מגיע לאייקון שבמסך הבית – הם נפרדים. לכן לא משחזרים בדפדפן, אלא רק אחרי שפותחים מהאייקון.</p>
       </section>
 
       <section class="card" aria-labelledby="h-restore">
-        <h2 id="h-restore"><span class="num" aria-hidden="true">3</span>משחזרים באפליקציה החדשה</h2>
+        <h2 id="h-restore"><span class="num" aria-hidden="true">3</span>פותחים מהאייקון החדש ומשחזרים</h2>
         <ol class="how">
-          <li>בכתובת החדשה: <span class="path">הגדרות</span> ← <span class="path">💾 גיבוי ושחזור</span> ← <span class="path">שחזור מהקובץ</span>.</li>
-          <li>בוחרים את הקובץ ששמו מתחיל ב-<span class="ltr">chessit-backup</span> (בדרך כלל בתיקיית ההורדות, או ב"קבצים" באייפון).</li>
+          <li>פותחים את ChessIt <b>מהאייקון החדש</b> במסך הבית.</li>
+          <li>במסך הראשון: <span class="path">📥 יש לך גיבוי?</span> (או, אם כבר יש פרופיל: <span class="path">הגדרות</span> ← <span class="path">💾 גיבוי ושחזור</span>).</li>
+          <li>שמרתם קובץ? <span class="path">📂 בחירת קובץ גיבוי</span> ובוחרים את הקובץ שמתחיל ב-<span class="ltr">chessit-backup</span> (בהורדות, או ב"קבצים" באייפון).<br />העתקתם טקסט? <span class="path">📋 הדבקת גיבוי כטקסט</span> ומדביקים.</li>
           <li>אחרי שהכול חזר – מוחקים את האייקון הישן ממסך הבית.</li>
         </ol>
       </section>
@@ -333,6 +359,39 @@
             });
         }
 
+        function copyText() {
+          var btn = $('btn-copy');
+          btn.disabled = true;
+          say('');
+          var box = $('copy-box');
+          box.hidden = true;
+          var text = '';
+          makeBackup(db, new Date())
+            .then(function (backup) {
+              text = JSON.stringify(backup); // one line: shorter to paste
+              if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('no clipboard');
+              return navigator.clipboard.writeText(text);
+            })
+            .then(function () {
+              say('✓ הגיבוי הועתק. כדאי להדביק אותו גם בפתקים או בהודעה לעצמכם, כדי שלא ילך לאיבוד. עכשיו לשלב 2.', 'good');
+            })
+            .catch(function (e) {
+              console.warn('[backup] copy failed', e);
+              if (text) {
+                box.value = text;
+                box.hidden = false;
+                box.focus();
+                box.select();
+                say('הטלפון לא נתן להעתיק אוטומטית. מסמנים את כל הטקסט בתיבה ומעתיקים.', '');
+              } else {
+                say('לא הצלחנו להכין את הגיבוי. אפשר לרענן ולנסות שוב.', 'bad');
+              }
+            })
+            .then(function () { btn.disabled = false; });
+        }
+
+        $('btn-copy').addEventListener('click', copyText);
+        $('copy-box').addEventListener('focus', function (e) { e.target.select(); });
         $('btn-share').addEventListener('click', function () { save('share'); });
         $('btn-download').addEventListener('click', function () { save('download'); });
 
@@ -345,7 +404,7 @@
           .then(function (backup) {
             var scan = $('scan');
             if (!backup || backup.profiles.length === 0) {
-              scan.textContent = 'בטלפון הזה (ובדפדפן הזה) לא נמצאו פרופילים מהכתובת הישנה – אין מה לגבות. אפשר לעבור ישר לשלב 2.';
+              scan.textContent = 'כאן לא נמצאו פרופילים מהכתובת הישנה. באייפון, הדפדפן והאייקון שבמסך הבית שומרים כל אחד בנפרד: אם שיחקתם מהאייקון הישן – פותחים אותו, והמסך הזה יופיע שם עם הפרופילים. אם אין מה לגבות, עוברים לשלב 2.';
               return;
             }
             var n = backup.profiles.length;

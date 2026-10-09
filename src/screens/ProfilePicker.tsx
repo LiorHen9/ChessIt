@@ -1,3 +1,4 @@
+import { BrowserBanner } from '../components/BrowserNotice';
 import type { Profile } from '../profiles/profiles';
 
 interface Props {
@@ -17,6 +18,8 @@ export function ProfilePicker({ profiles, onPick, onCreate, onEdit, onBackup, on
         <h1 class="logo">ChessIt</h1>
         <p class="lead">{first ? 'ברוכים הבאים! בואו ניצור פרופיל ראשון.' : 'מי משחק עכשיו?'}</p>
       </header>
+
+      <BrowserBanner what="מה שתעשו" />
 
       {!first && (
         <ul class="profile-grid">

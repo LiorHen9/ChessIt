@@ -2,6 +2,8 @@
 // Saving: share sheet with the file when the phone can (iPhone: "Save to Files", WhatsApp to
 // yourself…), and a plain download everywhere. Restoring: pick a file → it is checked and
 // previewed, and nothing changes until the parent confirms "add" or "replace all".
+// Text too: the same backup can be copied as text and pasted back – handy on iPhone, where the
+// browser and the home-screen app keep separate data and moving a file between them is a chore.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { listProfiles, getProgress, type Profile, type Progress } from '../profiles/profiles';
 import {
@@ -19,6 +21,7 @@ import {
 } from '../storage/backup';
 import { loadBackupState, markBackedUp } from '../storage/backupState';
 import { ParentCheck } from '../components/ParentCheck';
+import { BrowserBanner } from '../components/BrowserNotice';
 import './family.css';
 
 interface Props {
@@ -83,6 +86,12 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
   const [note, setNote] = useState<Note>(null);
   const [busy, setBusy] = useState(false);
   const [choices, setChoices] = useState<Record<string, Conflict>>({});
+  /** The backup as text, shown when the phone did not let us copy it (select and copy by hand). */
+  const [copyBox, setCopyBox] = useState<string | null>(null);
+  /** The paste box is open. */
+  const [pasting, setPasting] = useState(false);
+  const [pasted, setPasted] = useState('');
+  const canReadClipboard = typeof navigator.clipboard?.readText === 'function';
   const fileInput = useRef<HTMLInputElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
 
@@ -145,6 +154,62 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
     }
   }
 
+  async function copyText() {
+    setBusy(true);
+    setNote(null);
+    setCopyBox(null);
+    const now = new Date();
+    let text = '';
+    try {
+      // One line (no spaces): shorter to paste into notes or a message to yourself.
+      text = JSON.stringify(await makeBackup(now));
+      await navigator.clipboard.writeText(text);
+      await markBackedUp(now.getTime());
+      setLastBackup(now.getTime());
+      setNote({ tone: 'good', text: '✓ הגיבוי הועתק. עכשיו מדביקים אותו במקום שבו משחזרים (או בפתקים, כדי לשמור).' });
+    } catch (e) {
+      console.warn('[backup] copy failed', e);
+      if (text) {
+        setCopyBox(text);
+        setNote({ tone: 'info', text: 'הטלפון לא נתן להעתיק אוטומטית. מסמנים את כל הטקסט בתיבה ומעתיקים.' });
+      } else {
+        setNote({ tone: 'bad', text: 'לא הצלחנו להכין את הגיבוי. אפשר לנסות שוב.' });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Check a backup (from a file or pasted text) and show what is in it. */
+  function check(text: string, source: string) {
+    setNote(null);
+    const result = parseBackup(text.trim());
+    if (!result.ok) {
+      console.warn('[backup] refused', result.error);
+      const msg = source === 'text' && (result.error.code === 'not-json' || result.error.code === 'not-backup') ? 'זה לא טקסט של גיבוי ChessIt. צריך להדביק את כל הטקסט שהועתק, מההתחלה ועד הסוף.' : errorText(result.error);
+      setNote({ tone: 'bad', text: msg });
+      return;
+    }
+    if (result.backup.profiles.length === 0) {
+      setNote({ tone: 'bad', text: 'בגיבוי הזה אין אף פרופיל, אז אין מה לשחזר.' });
+      return;
+    }
+    setPasting(false);
+    setPasted('');
+    setView({ name: 'preview', backup: result.backup, file: source });
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      setPasted(text);
+      if (text.trim()) check(text, 'text');
+    } catch (e) {
+      console.warn('[backup] clipboard read failed', e);
+      setNote({ tone: 'info', text: 'לא הצלחנו לקרוא מההעתקה. לוחצים לחיצה ארוכה בתיבה ← "הדבק".' });
+    }
+  }
+
   async function pick(e: Event) {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -155,17 +220,7 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
       setNote({ tone: 'bad', text: errorText({ code: 'too-big' }) });
       return;
     }
-    const result = parseBackup(await file.text());
-    if (!result.ok) {
-      console.warn('[backup] refused', result.error);
-      setNote({ tone: 'bad', text: errorText(result.error) });
-      return;
-    }
-    if (result.backup.profiles.length === 0) {
-      setNote({ tone: 'bad', text: 'בקובץ הגיבוי הזה אין אף פרופיל, אז אין מה לשחזר.' });
-      return;
-    }
-    setView({ name: 'preview', backup: result.backup, file: file.name });
+    check(await file.text(), file.name);
   }
 
   async function restore(backup: Backup, mode: 'add' | 'replace') {
@@ -230,7 +285,20 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
                   <button class={`btn ${canShareFiles ? 'btn-secondary' : 'btn-primary'}`} data-backup="download" disabled={busy} onClick={() => void save('download')}>
                     ⬇️ הורדת קובץ
                   </button>
+                  <button class="btn btn-secondary" data-backup="copy" disabled={busy} onClick={() => void copyText()}>
+                    📋 העתקה כטקסט
+                  </button>
                 </div>
+                {copyBox !== null && (
+                  <textarea
+                    class="input backup-text"
+                    readOnly
+                    aria-label="הגיבוי כטקסט"
+                    data-testid="backup-copy-box"
+                    value={copyBox}
+                    onFocus={(e) => (e.target as HTMLTextAreaElement).select()}
+                  />
+                )}
                 <p class="fineprint fam-fine">ה-PIN נשמר בקובץ כמו בטלפון: בלי הספרות עצמן.</p>
               </>
             ) : (
@@ -240,11 +308,38 @@ export function BackupScreen({ backLabel, onBack, onRestored }: Props) {
 
           <section class="settings-section">
             <h2 class="section-title">📥 שחזור מגיבוי</h2>
-            <p class="settings-note">בוחרים קובץ גיבוי. קודם נראה מה יש בו, ושום דבר לא משתנה עד שמאשרים.</p>
+            <BrowserBanner what="השחזור" />
+            <p class="settings-note">בוחרים קובץ גיבוי, או מדביקים גיבוי שהועתק כטקסט. קודם נראה מה יש בו, ושום דבר לא משתנה עד שמאשרים.</p>
             <input ref={fileInput} type="file" class="visually-hidden" tabIndex={-1} aria-hidden="true" data-testid="backup-file" onChange={(e) => void pick(e)} />
             <button class="btn btn-secondary" data-backup="pick" onClick={() => fileInput.current?.click()}>
               📂 בחירת קובץ גיבוי
             </button>
+            {pasting ? (
+              <div class="backup-paste">
+                <textarea
+                  class="input backup-text"
+                  aria-label="הדבקת הגיבוי כטקסט"
+                  placeholder="לחיצה ארוכה כאן ← הדבק"
+                  data-testid="backup-paste-box"
+                  value={pasted}
+                  onInput={(e) => setPasted((e.target as HTMLTextAreaElement).value)}
+                />
+                <div class="row">
+                  <button class="btn btn-primary" data-backup="paste-check" disabled={!pasted.trim()} onClick={() => check(pasted, 'text')}>
+                    המשך
+                  </button>
+                  {canReadClipboard && (
+                    <button class="btn btn-secondary" data-backup="paste-clipboard" onClick={() => void pasteFromClipboard()}>
+                      📋 הדבקה מההעתקה
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <button class="btn btn-secondary" data-backup="paste" onClick={() => setPasting(true)}>
+                📋 הדבקת גיבוי כטקסט
+              </button>
+            )}
           </section>
           {noteLine}
         </main>

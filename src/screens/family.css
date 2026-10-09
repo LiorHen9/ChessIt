@@ -219,3 +219,21 @@ legend.fam-title {
 .about-danger .btn-danger-text {
   align-self: stretch;
 }
+
+/* Backup as text: the copy box (when the phone would not copy for us) and the paste box. */
+.backup-text {
+  width: 100%;
+  min-height: 7.5em;
+  resize: vertical;
+  direction: ltr;
+  text-align: left;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  /* 16px or more: iPhone zooms into smaller text fields. */
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.backup-paste {
+  display: grid;
+  gap: 10px;
+}

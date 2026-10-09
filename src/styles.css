@@ -2782,3 +2782,29 @@ body {
 .restore-link {
   align-self: center;
 }
+
+/* iPhone/iPad in a browser tab (components/BrowserNotice.tsx). */
+.install-why {
+  margin: 0 0 12px;
+}
+
+.install-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.install-steps {
+  margin: 0;
+  padding-inline-start: 1.3em;
+  display: grid;
+  gap: 6px;
+}
+
+.browser-banner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow), inset 0 0 0 2px var(--accent);
+  font-size: 0.95rem;
+}
