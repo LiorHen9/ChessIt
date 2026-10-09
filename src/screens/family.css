@@ -135,14 +135,6 @@ legend.fam-title {
   color: var(--ink-soft);
 }
 
-.about-link {
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  color: var(--ink);
-}
-
 .about-list {
   margin: 0;
   padding-inline-start: 20px;

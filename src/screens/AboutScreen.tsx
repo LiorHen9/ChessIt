@@ -10,9 +10,6 @@ import { deleteEverything } from '../storage/backup';
 import { ParentCheck } from '../components/ParentCheck';
 import './family.css';
 
-export const REPO_URL = 'https://github.com/LiorHen9/ChessIt';
-export const ISSUES_URL = `${REPO_URL}/issues/new`;
-
 interface Props {
   backLabel: string;
   onBack: () => void;
@@ -23,7 +20,6 @@ interface Props {
 }
 
 const CREDITS: { name: string; what: string; licence: string; url: string }[] = [
-  { name: 'ChessIt', what: 'האפליקציה עצמה, קוד פתוח', licence: 'GPL-3.0', url: REPO_URL },
   { name: 'Stockfish', what: 'המנוע של רמות 3–8 והסיכום', licence: 'GPL-3.0', url: 'https://stockfishchess.org' },
   { name: 'chess.js', what: 'חוקי השחמט', licence: 'BSD-2-Clause', url: 'https://github.com/jhlywa/chess.js' },
   { name: 'Preact', what: 'בניית המסכים', licence: 'MIT', url: 'https://preactjs.com' },
@@ -43,7 +39,7 @@ function standalone(): boolean {
 
 /** The details for a problem report: the app and the phone, and recent errors. No names. */
 export async function reportText(errors: ErrorEntry[], profiles: number): Promise<string> {
-  // Labels in English: the text is pasted into messages and GitHub issues, and Hebrew mixed into
+  // Labels in English: the text is pasted into messages, and Hebrew mixed into
   // left-to-right lines comes out scrambled.
   let persisted = '?';
   try {
@@ -141,9 +137,6 @@ export function AboutScreen({ backLabel, onBack, focus, onDeleted }: Props) {
             </>
           )}
         </p>
-        <a class="btn btn-secondary about-link" href={REPO_URL} target="_blank" rel="noopener">
-          הקוד של ChessIt ב-GitHub
-        </a>
       </section>
 
       <section class="settings-section" aria-labelledby="privacy-title">
@@ -174,7 +167,7 @@ export function AboutScreen({ backLabel, onBack, focus, onDeleted }: Props) {
           🙏 תודות ורישיונות
         </h2>
         <p class="settings-note">
-          ChessIt הוא קוד פתוח ברישיון <bdi dir="ltr">GPL-3.0</bdi>, ונבנה על העבודה של:
+          ChessIt נבנה על העבודה של:
         </p>
         <ul class="credits">
           {CREDITS.map((c) => (
@@ -227,11 +220,7 @@ export function AboutScreen({ backLabel, onBack, focus, onDeleted }: Props) {
           {copied === 'ok' ? '✓ הועתק. עכשיו מדביקים בהודעה.' : copied === 'fail' ? 'לא הצלחנו להעתיק. אפשר לסמן את הטקסט ולהעתיק ידנית.' : ''}
         </p>
         <p class="settings-note">
-          לאן לשלוח: הודעה למי ששלח לך את הקישור לאפליקציה, או{' '}
-          <a href={ISSUES_URL} target="_blank" rel="noopener">
-            דיווח ב-GitHub
-          </a>{' '}
-          (צריך חשבון).
+          לאן לשלוח: הודעה למי ששלח לך את הקישור לאפליקציה.
         </p>
         {errors.length > 0 && (
           <button

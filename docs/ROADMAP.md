@@ -17,7 +17,7 @@ flowchart LR
 
 ## שלב 0 – תשתית
 
-- [x] מאגר ציבורי ב-GitHub עם רישיון GPL-3
+- [x] מאגר ציבורי ב-GitHub עם רישיון GPL-3 (באוקטובר 2026 הפך לפרטי; הקישורים למאגר הוסרו מהמסך "אודות")
 - [x] פרויקט Vite + TypeScript + Preact
 - [x] פריסה אוטומטית ל-GitHub Pages דרך GitHub Actions (באוקטובר 2026 עבר ל-Firebase Hosting, כדי שהמאגר יוכל להיות פרטי)
 - [x] מעטפת PWA: manifest, אייקונים, Service Worker
