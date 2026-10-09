@@ -19,7 +19,7 @@ flowchart LR
 
 - [x] מאגר ציבורי ב-GitHub עם רישיון GPL-3
 - [x] פרויקט Vite + TypeScript + Preact
-- [x] פריסה אוטומטית ל-GitHub Pages דרך GitHub Actions
+- [x] פריסה אוטומטית ל-GitHub Pages דרך GitHub Actions (באוקטובר 2026 עבר ל-Firebase Hosting, כדי שהמאגר יוכל להיות פרטי)
 - [x] מעטפת PWA: manifest, אייקונים, Service Worker
 - [x] ממשק RTL בסיסי וגופן עברי
 

@@ -1,5 +1,8 @@
-name: Deploy to GitHub Pages
+name: Deploy to Firebase Hosting
 
+# Every push to main builds the site and publishes it to https://chessit-6d389.web.app
+# Needs the FIREBASE_SERVICE_ACCOUNT secret (docs/FIREBASE.md, part ד; the same key the
+# room clean-up uses). The service account also needs the "Firebase Hosting Admin" role (part ו).
 on:
   push:
     branches: [main]
@@ -7,18 +10,25 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      - name: Check the deploy key
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Missing the FIREBASE_SERVICE_ACCOUNT secret – see docs/FIREBASE.md, part ד"
+            exit 1
+          fi
 
       - uses: actions/setup-node@v5
         with:
@@ -28,21 +38,11 @@ jobs:
         run: npm install
 
       - name: Build
+        # Firebase serves the site at the root of the domain, so the default base (/) is right.
         run: npm run build
-        env:
-          # The site lives at https://<user>.github.io/<repo>/
-          BASE_PATH: /${{ github.event.repository.name }}/
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: chessit-6d389
+          channelId: live

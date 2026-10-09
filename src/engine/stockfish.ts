@@ -1,5 +1,5 @@
 // Levels 3–8 and the game summary: Stockfish 19 "lite", single-threaded, compiled to WebAssembly.
-// The single-threaded build needs no SharedArrayBuffer, so it runs on GitHub Pages without
+// The single-threaded build needs no SharedArrayBuffer, so it runs on static hosting without
 // COOP/COEP headers. The files live in public/engine and load only on first use.
 // Source: https://github.com/nmrugg/stockfish.js (v19.0.0), GPL-3.0.
 
@@ -46,7 +46,7 @@ export class StockfishEngine implements Engine {
       };
       let worker: Worker;
       try {
-        // Relative to the page, so it works under /ChessIt/ on GitHub Pages and at / locally.
+        // Relative to the page, so it works at any base path (/ on Firebase Hosting, or a sub-path).
         worker = new Worker(new URL(STOCKFISH_SCRIPT, document.baseURI));
       } catch (e) {
         fail(e instanceof Error ? e : new Error(String(e)));

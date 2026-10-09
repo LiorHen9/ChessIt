@@ -1,5 +1,5 @@
 // A small QR code encoder: byte mode, error correction level M, versions 1–10 (up to 213 bytes).
-// Enough for a room link (https://liorhen9.github.io/ChessIt/?room=K7P2Q is version 4).
+// Enough for a room link (https://chessit-6d389.web.app/?room=K7P2Q is version 3).
 // Written for this app, following the QR standard (ISO/IEC 18004) the way Project Nayuki's
 // QR-Code-generator (MIT) lays it out; checked by decoding the picture in tests/net/check.ts and
 // tests/e2e/phase6.cjs. Loaded only on the room screens.

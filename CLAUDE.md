@@ -17,8 +17,8 @@
 
 אפליקציית רשת (PWA) לטלפון ללימוד שחמט, בעברית, לילדים ולמבוגרים. כמה פרופילים לכל מכשיר, כל פרופיל בקצב שלו, וכל הנתונים נשמרים מקומית.
 
-- אתר: https://liorhen9.github.io/ChessIt/
-- מאגר: https://github.com/LiorHen9/ChessIt (ענף `main`; כל דחיפה נבנית ומתפרסמת ב-GitHub Pages)
+- אתר: https://chessit-6d389.web.app/
+- מאגר: https://github.com/LiorHen9/ChessIt (ענף `main`; כל דחיפה נבנית ומתפרסמת ב-Firebase Hosting, פרויקט `chessit-6d389`; `firebase.json`, `.firebaserc`)
 - מסמכים: `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/FIREBASE.md` (הקמת החדרים, למשתמש), `docs/DEVICE-CHECKS.md` (בדיקות בטלפונים, למשתמש), `docs/prompts/`
 - גרסה: `version` ב-`package.json` (היום `0.9.0`, בטא משפחתית; `1.0.0` בהשקה). מוזרקת בבנייה עם זמן הבנייה וה-commit (`src/app/version.ts`).
 
@@ -62,7 +62,7 @@
 
 ## בנייה ובדיקה
 
-- `npm run build` מריץ בדיקת טיפוסים ובנייה. GitHub Actions הוא מקור האמת: לבדוק אחרי כל דחיפה ש-`Deploy to GitHub Pages` הצליח (`gh run list --repo LiorHen9/ChessIt`).
+- `npm run build` מריץ בדיקת טיפוסים ובנייה. GitHub Actions הוא מקור האמת: לבדוק אחרי כל דחיפה ש-`Deploy to Firebase Hosting` הצליח (`gh run list --repo LiorHen9/ChessIt`).
 - **אם npm חסום בסביבת העבודה** (כך היה בסשנים הקודמים): לשכפל את preact (תגית 10.x האחרונה) ואת chess.js מ-GitHub לתיקיית scratchpad, למפות אותם ב-`paths` של tsconfig זמני, ולהריץ:
   - בדיקת טיפוסים: `tsc -p <tsconfig זמני>` (שגיאת ה-import של `styles.css` צפויה מקומית ואפשר להתעלם ממנה).
   - בנייה: `bun build src/main.tsx` עם אותם `paths`. ל-chess.js צריך קובץ דמה `src/pgn.ts`, כי מנתח ה-PGN נוצר בזמן בנייה.

@@ -1,6 +1,6 @@
 # ChessIt – לומדים שחמט ביחד
 
-**https://liorhen9.github.io/ChessIt/**
+**https://chessit-6d389.web.app/**
 
 אפליקציה לטלפון ללימוד שחמט, בעברית, לכל המשפחה. ילדים מגיל 5 ומבוגרים שלא יודעים איך הפרש זז מתחילים מאפס, וכל אחד מתקדם בקצב שלו: לומדים את הלוח והכלים, פותרים חידות, משחקים נגד המחשב, ומשחקים אחד נגד השני – על טלפון אחד או משני טלפונים.
 
@@ -31,7 +31,7 @@
 
 **אנדרואיד (Chrome)**
 
-1. פותחים את https://liorhen9.github.io/ChessIt/ ב-Chrome.
+1. פותחים את https://chessit-6d389.web.app/ ב-Chrome.
 2. לוחצים על שלוש הנקודות ⋮ למעלה.
 3. בוחרים **"התקנת האפליקציה"** (או **"הוספה למסך הבית"**), ואז **"התקנה"**.
 
@@ -80,9 +80,9 @@ npm run preview   # הצגת הגרסה הבנויה
 
 ### פריסה
 
-כל דחיפה לענף `main` בונה את האתר ומפרסמת אותו ב-GitHub Pages, דרך `.github/workflows/deploy.yml`.
+כל דחיפה לענף `main` בונה את האתר ומפרסמת אותו ב-Firebase Hosting, דרך `.github/workflows/deploy.yml`.
 
-הגדרה חד-פעמית במאגר: **Settings ← Pages ← Source: GitHub Actions**.
+הגדרה חד-פעמית: הסוד `FIREBASE_SERVICE_ACCOUNT` במאגר, עם הרשאת Firebase Hosting Admin (ראו `docs/FIREBASE.md`, חלקים ד ו-ו).
 
 חדרים (משחק בין שני טלפונים) עוברים דרך Firebase Realtime Database. ההקמה, כללי האבטחה והניקוי האוטומטי (`.github/workflows/cleanup-rooms.yml`) מתוארים ב-[docs/FIREBASE.md](docs/FIREBASE.md).
 

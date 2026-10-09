@@ -1,5 +1,5 @@
 אנחנו ממשיכים לבנות את ChessIt, אפליקציית PWA בעברית ללימוד שחמט לילדים ולמבוגרים
-(מאגר LiorHen9/ChessIt, אתר https://liorhen9.github.io/ChessIt/).
+(מאגר LiorHen9/ChessIt, אתר https://chessit-6d389.web.app/).
 קרא קודם את CLAUDE.md, docs/ARCHITECTURE.md ו-docs/ROADMAP.md. שלבים 0–7 הושלמו, והאפליקציה
 בבטא משפחתית (גרסה 0.9.0): פרופילים, לוח SVG, משחק לשניים, נגד המחשב (KidEngine ו-Stockfish),
 מסלול לימוד של 8 חלקים (13 עולמות, 71 תחנות), חידות Lichess, חזרה מרווחת, חידה יומית, מבחן כניסה,

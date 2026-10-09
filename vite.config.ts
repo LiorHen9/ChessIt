@@ -3,8 +3,8 @@ import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { readFileSync } from 'node:fs';
 
-// GitHub Pages serves the site under /<repo-name>/.
-// The deploy workflow sets BASE_PATH; locally the app runs at /.
+// Firebase Hosting serves the site at the root of the domain, as does the dev server.
+// BASE_PATH is only for hosting under a sub-path (as on GitHub Pages, before the move).
 const base = process.env.BASE_PATH ?? '/';
 // Shown in the About screen (src/app/version.ts).
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
