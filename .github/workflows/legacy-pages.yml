@@ -1,0 +1,51 @@
+name: Old address notice (GitHub Pages)
+
+# The app moved to Firebase Hosting (https://chessit-6d389.web.app). The old address,
+# https://liorhen9.github.io/ChessIt/, now shows only a notice: the new link, a backup of the
+# family's data from this phone (it is stored per address), and how to restore it.
+# The page is legacy-pages/; this publishes it to GitHub Pages instead of the old app.
+# It stops working by itself once the repository is private (docs/FIREBASE.md, part ו).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'legacy-pages/**'
+      - '.github/workflows/legacy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Put the page together
+        run: |
+          mkdir -p site
+          cp -r legacy-pages/. site/
+          cp public/favicon.svg site/
+          cp -r public/icons public/fonts site/
+          ls -R site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
