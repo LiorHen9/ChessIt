@@ -1,4 +1,5 @@
-// Replaces the old app's Service Worker at the old address (https://liorhen9.github.io/ChessIt/).
+// Replaces the old app's Service Worker at an old address (https://liorhen9.github.io/ChessIt/ or
+// https://chessit-6d389.web.app/).
 //
 // Phones that installed the app there keep running a Workbox Service Worker that serves the
 // cached old app, even offline. Browsers check this file for updates when the app is opened, so

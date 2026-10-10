@@ -1,6 +1,9 @@
 name: Deploy to Firebase Hosting
 
-# Every push to main builds the site and publishes it to https://chessit-liorhen9.web.app (site chessit-liorhen9 in project chessit-6d389)
+# Every push to main builds the site and publishes it to https://chessit-liorhen9.web.app
+# (Hosting site chessit-liorhen9 in the Firebase project chessit-6d389). The project's first site,
+# https://chessit-6d389.web.app, gets the "ChessIt moved" notice instead (legacy-pages/, see
+# firebase.json): the new link, a backup of the data stored at the old address, how to restore.
 # Needs the FIREBASE_SERVICE_ACCOUNT secret (docs/FIREBASE.md, part ד; the same key the
 # room clean-up uses). The service account also needs the "Firebase Hosting Admin" role (part ו).
 on:
@@ -40,6 +43,9 @@ jobs:
       - name: Build
         # Firebase serves the site at the root of the domain, so the default base (/) is right.
         run: npm run build
+
+      - name: Put together the notice for the old address
+        run: bash scripts/legacy-site.sh / legacy-site
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:

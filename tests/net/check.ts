@@ -186,9 +186,9 @@ ok(startFenFor('guest', { seat: 'host', pieces: 'q' }).startsWith('rnb1kbnr/'), 
 console.log('✓ replay and handicap starts');
 
 // ---------- QR ----------
-const link = 'https://chessit-6d389.web.app/?room=K7PXQ';
+const link = 'https://chessit-liorhen9.web.app/?room=K7PXQ';
 const m = qrMatrix(link);
-ok(m.length === 29, `room link is a version 3 QR (${m.length})`);
+ok(m.length === 33, `room link is a version 4 QR (${m.length})`);
 const dir = mkdtempSync(join(tmpdir(), 'qr-'));
 const texts = [link, 'HELLO', 'x'.repeat(150), 'שלום https://example.com/?a=1&b=2'];
 writeFileSync(join(dir, 'm.json'), JSON.stringify(texts.map((t) => ({ t, m: qrMatrix(t).map((r) => r.map(Number)) }))));

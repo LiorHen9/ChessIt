@@ -17,8 +17,8 @@
 
 אפליקציית רשת (PWA) לטלפון ללימוד שחמט, בעברית, לילדים ולמבוגרים. כמה פרופילים לכל מכשיר, כל פרופיל בקצב שלו, וכל הנתונים נשמרים מקומית.
 
-- אתר: https://chessit-6d389.web.app/
-- מאגר: https://github.com/LiorHen9/ChessIt (ענף `main`; כל דחיפה נבנית ומתפרסמת ב-Firebase Hosting, פרויקט `chessit-6d389`; `firebase.json`, `.firebaserc`)
+- אתר: https://chessit-liorhen9.web.app/ (אתר Hosting בשם `chessit-liorhen9`; הכתובת הקודמת, https://chessit-6d389.web.app/, מציגה רק את מסך המעבר)
+- מאגר: https://github.com/LiorHen9/ChessIt (ענף `main`; כל דחיפה נבנית ומתפרסמת ב-Firebase Hosting, פרויקט `chessit-6d389`, אתר `chessit-liorhen9`; `firebase.json`, `.firebaserc`)
 - מסמכים: `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/FIREBASE.md` (הקמת החדרים, למשתמש), `docs/DEVICE-CHECKS.md` (בדיקות בטלפונים, למשתמש), `docs/prompts/`
 - גרסה: `version` ב-`package.json` (היום `0.9.0`, בטא משפחתית; `1.0.0` בהשקה). מוזרקת בבנייה עם זמן הבנייה וה-commit (`src/app/version.ts`).
 
@@ -36,7 +36,7 @@
 - `src/storage/db.ts` – עטיפה ל-IndexedDB. כל שינוי במאגרים מחייב העלאת `SCHEMA_VERSION` והגירה. `dbWrite` – כמה שינויים בכמה מאגרים בטרנזקציה אחת.
 - `src/storage/backup.ts` – גיבוי ושחזור (נטען בעצלות): `parseBackup`/`checkBackup` (בדיקה מלאה), `MIGRATIONS` לגיבויים ישנים, `restoreOps` (טהור), `deleteEverything`. **שדה חדש בפרופיל, בהתקדמות או בהגדרות – להוסיף גם לבדיקה ב-`checkBackup`**, אחרת הוא נזרק בשחזור. שינוי מבנה – להעלות `BACKUP_VERSION` ולהוסיף צעד ב-`MIGRATIONS`. `src/storage/backupState.ts` – התזכורת (בטעינה הראשונה).
 - `src/screens/BackupScreen.tsx`, `src/screens/AboutScreen.tsx` (אודות, פרטיות, תודות, "מצאת בעיה?", מחיקת הכול), `src/screens/family.css` – בטעינה עצלה. `src/components/ParentCheck.tsx` – שאלת הורה לכל פעולה של כל המשפחה (איפוס PIN, החלפת הכול, מחיקת הכול).
-- `src/app/install.ts` + `src/components/BrowserNotice.tsx` – באייפון, דפדפן ואייקון במסך הבית שומרים נתונים בנפרד: מסך הסבר בדפדפן ושורת תזכורת (`?browser-notice=1` ב-localhost לבדיקות). `legacy-pages/` – מסך "עבר לכתובת חדשה" בכתובת הישנה ב-GitHub Pages (`.github/workflows/legacy-pages.yml`).
+- `src/app/install.ts` + `src/components/BrowserNotice.tsx` – באייפון, דפדפן ואייקון במסך הבית שומרים נתונים בנפרד: מסך הסבר בדפדפן ושורת תזכורת (`?browser-notice=1` ב-localhost לבדיקות). `legacy-pages/` – מסך "עבר לכתובת חדשה" בכתובות הישנות: GitHub Pages (`.github/workflows/legacy-pages.yml`) ו-`chessit-6d389.web.app` (האתר השני ב-`firebase.json`, מתפרסם ב-`deploy.yml`). `scripts/legacy-site.sh` מרכיב אותו לכל כתובת.
 - `src/app/errorLog.ts` – יומן שגיאות מקומי (‏`meta.errorLog`, עד 20), בלי שליחה לשום מקום. `src/app/version.ts` – גרסה, זמן בנייה, commit.
 - `public/fonts/rubik.woff2` – הגופן (עברית + לטינית, OFL), במאגר ולא מ-Google. `public/og-image.png` – תמונת השיתוף (`scripts/og-image.ts` + `scripts/og-image-shot.cjs`). `docs/screenshots/` – מ-`scripts/screenshots.cjs`.
 - `src/game/savedGame.ts` – משחק פתוח (כולל `startFen` ו-`computer`) ופרופיל אחרון ב-`meta`. `src/game/analysis.ts` – סיכום משחק.

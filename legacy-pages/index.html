@@ -1,7 +1,10 @@
 <!doctype html>
 <!--
-  The page at the OLD address (https://liorhen9.github.io/ChessIt/), published by
-  .github/workflows/legacy-pages.yml. It replaces the app there.
+  The page at the OLD addresses, where it replaces the app:
+  - https://liorhen9.github.io/ChessIt/ (GitHub Pages), published by .github/workflows/legacy-pages.yml;
+  - https://chessit-6d389.web.app/ (the first Firebase Hosting site), published by
+    .github/workflows/deploy.yml together with the app.
+  scripts/legacy-site.sh puts it together for each address.
 
   The family's data lives in IndexedDB *per address*, so the old data is only reachable from this
   address. That is why this page can still make a backup: it reads the same database the old app
@@ -169,8 +172,8 @@
 
       <section class="card" aria-labelledby="h-new">
         <h2 id="h-new"><span class="num" aria-hidden="true">2</span>מתקינים את הכתובת החדשה למסך הבית</h2>
-        <p class="url">https://chessit-6d389.web.app/</p>
-        <a class="btn btn-primary" id="go" href="https://chessit-6d389.web.app/">♟️ פתיחת ChessIt החדש</a>
+        <p class="url">https://chessit-liorhen9.web.app/</p>
+        <a class="btn btn-primary" id="go" href="https://chessit-liorhen9.web.app/">♟️ פתיחת ChessIt החדש</a>
         <ul class="how" style="margin-top: 12px">
           <li><b>אייפון:</b> ב-Safari ← כפתור השיתוף ← "הוספה למסך הבית" ← "הוסף".</li>
           <li><b>אנדרואיד:</b> ב-Chrome ← <span class="ltr">⋮</span> ← "התקנת האפליקציה".</li>
@@ -194,7 +197,7 @@
     <script>
       (function () {
         'use strict';
-        var NEW_URL = 'https://chessit-6d389.web.app/';
+        var NEW_URL = 'https://chessit-liorhen9.web.app/';
 
         // A shared room link (?room=K7P2Q) keeps working: it goes to the same room at the new address.
         var room = new URLSearchParams(location.search).get('room');

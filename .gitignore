@@ -4,3 +4,5 @@ dev-dist/
 .DS_Store
 *.log
 scripts/og-image.html
+legacy-site/
+site/
