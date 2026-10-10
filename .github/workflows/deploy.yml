@@ -1,6 +1,6 @@
 name: Deploy to Firebase Hosting
 
-# Every push to main builds the site and publishes it to https://chessit-6d389.web.app
+# Every push to main builds the site and publishes it to https://chessit-liorhen9.web.app (site chessit-liorhen9 in project chessit-6d389)
 # Needs the FIREBASE_SERVICE_ACCOUNT secret (docs/FIREBASE.md, part ד; the same key the
 # room clean-up uses). The service account also needs the "Firebase Hosting Admin" role (part ו).
 on:
